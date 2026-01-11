@@ -39,7 +39,7 @@ class DialogSystem {
       configButtons.forEach((btnConfig) => {
         const btn = document.createElement('button')
         btn.innerText = btnConfig.text
-        btn.className = `btn btn-${btnConfig.type === 'ok' ? 'primary' : btnConfig.type === 'danger' ? 'danger' : 'secondary'}`
+        btn.className = `btn btn-${btnConfig.type === 'ok' ? 'secondary' : btnConfig.type === 'danger' ? 'danger' : 'secondary'}`
 
         btn.onclick = async () => {
           this.close()

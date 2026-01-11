@@ -1,5 +1,6 @@
 import { setUser, setView } from '../state'
 import { auth } from '../ipc'
+import { Dialog } from './dialog'
 // import _mockSession from '../_mock-msa'
 
 export function initLogin() {
@@ -21,11 +22,11 @@ export function initLogin() {
         setView('home')
       } else {
         console.error(session.error)
-        alert('Login failed')
+        await Dialog.show('Login failed', [{ text: 'OK', type: 'ok' }])
       }
     } catch (err) {
       console.error(err)
-      alert('An error occurred during login.')
+      await Dialog.show('An error occurred during login.', [{ text: 'OK', type: 'ok' }])
     } finally {
       btn.disabled = false
       btn.innerHTML = originalText
