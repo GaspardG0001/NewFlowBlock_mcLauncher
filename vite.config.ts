@@ -3,6 +3,9 @@ import electron from 'vite-plugin-electron'
 
 export default defineConfig({
   base: './',
+  server: {
+    port: 5174
+  },
   plugins: [
     electron([
       {
