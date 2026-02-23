@@ -8,7 +8,7 @@ Powered by <a href="https://github.com/Electron-Minecraft-Launcher/EML-Lib-v2"><
 
 [<p align="center"><img src="https://img.shields.io/badge/Discord-Electron_Minecraft_Launcher-5561e6?&style=for-the-badge">](https://discord.gg/YVB4k6HzAY)
 [<img src="https://img.shields.io/badge/platforms-Win,_Mac,_Lin-0077DA?style=for-the-badge&color=0077DA">](#platforms)
-[<img src="https://img.shields.io/badge/version-1.0.1-orangered?style=for-the-badge&color=orangered">](package.json)</p>
+[<img src="https://img.shields.io/badge/version-1.0.3-orangered?style=for-the-badge&color=orangered">](package.json)</p>
 
 <p>
 <center>
