@@ -2,7 +2,7 @@ import { setBlockingView, setUser, setView } from './state'
 import { auth, background, bootstraps, maintenance } from './ipc'
 // import _mockSession from './_mock-msa'
 
-const DEFAULT_BACKGROUND = '/src/static/images/bg.jpg'
+const DEFAULT_BACKGROUND = '/src/static/images/bg.png'
 const dateFormatOptions: Intl.DateTimeFormatOptions = {
   day: '2-digit',
   month: '2-digit',
@@ -45,7 +45,7 @@ export async function bootstrap() {
   const up = await bootstraps.check()
   const bg = await background.get()
   const mn = await maintenance.get()
-  const bgUrl = bg?.file.url ?? DEFAULT_BACKGROUND
+  const bgUrl = bg?.file?.url ?? DEFAULT_BACKGROUND
 
   if (up.updateAvailable) {
     setIndeterminate(false)

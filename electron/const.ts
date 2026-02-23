@@ -1,1 +1,1 @@
-export const ADMINTOOL_URL = 'http://localhost:8080'
+export const ADMINTOOL_URL = 'http://localhost:5173'
