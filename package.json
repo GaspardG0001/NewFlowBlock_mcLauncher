@@ -4,7 +4,7 @@
   "author": "GoldFrite",
   "description": "Template launcher with EML Lib",
   "private": true,
-  "version": "1.0.3",
+  "version": "1.0.4",
   "license": "MIT",
   "main": "dist-electron/main.js",
   "scripts": {
