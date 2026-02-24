@@ -71,10 +71,12 @@ export function closeOverlay(view: ViewName) {
   target?.classList.remove('active')
 }
 
-function getAccountIcon(type: 'msa' | 'azuriom' | 'crack') {
+function getAccountIcon(type: 'msa' | 'yggdrasil' | 'azuriom' | 'crack') {
   switch (type) {
     case 'msa':
       return '<i class="fa-brands fa-microsoft"></i>Microsoft account'
+    case 'yggdrasil':
+      return '<i class="fa-solid fa-user"></i>Yggdrasil account'
     case 'azuriom':
       return '<i class="fa-brands fa-globe"></i>Azuriom account'
     case 'crack':
@@ -93,3 +95,4 @@ function resetSettingsTab() {
   tabButtons[0].classList.add('active')
   tabContents[0].classList.add('active')
 }
+

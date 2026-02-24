@@ -11,11 +11,11 @@ import type {
   IBootstraps,
   IMaintenance,
   INews,
+  IServerStatus,
   JavaEvents,
   LauncherEvents,
   PatcherEvents
 } from 'eml-lib'
-import type { ServerStatus } from 'eml-lib/types/status'
 
 contextBridge.exposeInMainWorld('api', {
   auth: {
@@ -76,7 +76,7 @@ contextBridge.exposeInMainWorld('api', {
     patchDebug: (callback: (value: PatcherEvents['patch_debug'][0]) => void) => ipcRenderer.on('game:patch_debug', (_event, value) => callback(value))
   },
   server: {
-    getStatus: (ip: string, port?: number): Promise<ServerStatus> => ipcRenderer.invoke('server:status', ip, port)
+    getStatus: (ip: string, port?: number): Promise<IServerStatus> => ipcRenderer.invoke('server:status', ip, port)
   },
   news: {
     getNews: (): Promise<INews[]> => ipcRenderer.invoke('news:get_news'),

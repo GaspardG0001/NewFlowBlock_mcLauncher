@@ -10,12 +10,12 @@ import type {
   IBootstraps,
   IMaintenance,
   INews,
+  IServerStatus,
   INewsCategory,
   JavaEvents,
   LauncherEvents,
   PatcherEvents
 } from 'eml-lib'
-import type { ServerStatus } from 'eml-lib/types/status'
 
 declare global {
   interface Window {
@@ -26,7 +26,7 @@ declare global {
         logout: () => Promise<{ success: boolean }>
       }
       server: {
-        getStatus: (ip: string, port?: number) => Promise<ServerStatus | null>
+        getStatus: (ip: string, port?: number) => Promise<IServerStatus | null>
       }
       news: {
         getNews: () => Promise<INews[]>
