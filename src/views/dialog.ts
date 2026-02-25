@@ -1,3 +1,5 @@
+import logger from 'electron-log/renderer'
+
 export type ButtonType = 'ok' | 'cancel' | 'danger' | 'other'
 
 export interface DialogButton {

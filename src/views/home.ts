@@ -2,6 +2,7 @@ import { setView, getUser } from '../state'
 import { game, news, server, settings } from '../ipc'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
+import logger from 'electron-log/renderer'
 
 marked.use({
   renderer: {
