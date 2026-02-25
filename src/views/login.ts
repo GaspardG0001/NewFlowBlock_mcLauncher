@@ -1,6 +1,7 @@
 import { setUser, setView } from '../state'
 import { auth } from '../ipc'
 import { Dialog } from './dialog'
+import logger from 'electron-log/renderer'
 // import _mockSession from '../_mock-msa'
 
 export function initLogin() {
