@@ -130,7 +130,12 @@
           </div>
 
           <div class="sidebar-middle">
-            <h3>Shop</h3>
+            <h3 class="shop-header">
+              <span>Shop</span>
+              <span class="shop-link">
+                <a href="https://emlproject.pages.dev" target="_blank"><i class="fa-fw fa-solid fa-cart-shopping"></i> Visit shop...</a>
+              </span>
+            </h3>
             <div class="shop-item">
               <img src="src/static/images/gold.png" class="shop-item-image" alt="Gold Rank" />
               <div class="shop-item-details">
@@ -159,14 +164,17 @@
                 <span class="item-price">$5.99</span>
               </div>
             </div>
-
-            <a class="btn btn-secondary" href="https://emlproject.qzz.io/shop" target="_blank">
-              <i class="fa-fw fa-solid fa-cart-shopping"></i>
-              <span>Visit shop</span>
-            </a>
           </div>
 
           <div class="sidebar-bottom">
+            <div class="profile-selector-container" id="profile-selector">
+              <div class="selected-profile">
+                <span id="current-profile-name">Select Profile</span>
+                <i class="fa-solid fa-chevron-down"></i>
+              </div>
+              <div class="profile-dropdown" id="profile-dropdown"></div>
+            </div>
+
             <div class="server-status">
               <div class="status-indicator" id="server-status-indicator">
                 <div class="status-dot pinging" id="server-status-dot"></div>
@@ -197,7 +205,7 @@
             <div class="social-links">
               <a href="https://discord.gg/YVB4k6HzAY" target="_blank" class="btn btn-icon-only"><i class="fa-brands fa-discord"></i></a>
               <a href="https://twitter.com/EMLProject" target="_blank" class="btn btn-icon-only"><i class="fa-brands fa-x-twitter"></i></a>
-              <a href="https://emlproject.qzz.io" target="_blank" class="btn btn-icon-only"><i class="fa-solid fa-globe"></i></a>
+              <a href="https://emlproject.pages.dev" target="_blank" class="btn btn-icon-only"><i class="fa-solid fa-globe"></i></a>
             </div>
           </div>
 

@@ -1,22 +1,23 @@
 import { ipcMain, BrowserWindow, app } from 'electron'
 import { Launcher } from 'eml-lib'
-import type { Account } from 'eml-lib'
+import type { Account, IProfile } from 'eml-lib'
 import type { IGameSettings } from './settings'
 import logger from 'electron-log/main'
 import { ADMINTOOL_URL } from '../const'
 
 export function registerLauncherHandlers(mainWindow: BrowserWindow) {
-  ipcMain.handle('game:launch', (_event, payload: { account: Account; settings: IGameSettings }) => {
-    const { account, settings } = payload
+  ipcMain.handle('game:launch', (_event, payload: { account: Account; settings: IGameSettings; profileSlug: string }) => {
+    const { account, settings, profileSlug } = payload
     const java = settings.java === 'system' ? { install: 'manual' as const, absolutePath: 'java' } : { install: 'auto' as const }
     logger.log('Launching')
 
     const launcher = new Launcher({
       url: ADMINTOOL_URL,
-      serverId: 'goldfrite',
+      root: 'goldfrite',
+      profile: { slug: profileSlug },
       account: account,
       cleaning: {
-        clean: false
+        enabled: false
       },
       java: java,
       memory: {
@@ -152,5 +153,4 @@ export function registerLauncherHandlers(mainWindow: BrowserWindow) {
     }
   })
 }
-
 

@@ -14,7 +14,8 @@ import type {
   INewsCategory,
   JavaEvents,
   LauncherEvents,
-  PatcherEvents
+  PatcherEvents,
+  IProfile
 } from 'eml-lib'
 
 declare global {
@@ -24,6 +25,9 @@ declare global {
         login: () => Promise<IAuthResponse>
         refresh: () => Promise<IAuthResponse>
         logout: () => Promise<{ success: boolean }>
+      }
+      profiles: {
+        get: () => Promise<IProfile[]>
       }
       server: {
         getStatus: (ip: string, port?: number) => Promise<IServerStatus | null>
@@ -47,7 +51,7 @@ declare global {
         error: (callback: (value: BootstrapsEvents['bootstraps_error'][0]) => void) => void
       }
       game: {
-        launch: (payload: { account: Account; settings: IGameSettings }) => Promise<void>
+        launch: (payload: { account: Account; settings: IGameSettings, profileSlug: string }) => Promise<void>
 
         launchComputeDownload: (callback: () => void) => void
 
@@ -102,6 +106,10 @@ export const auth = {
   refresh: async () => await window.api.auth.refresh()
 }
 
+export const profiles = {
+  get: async () => await window.api.profiles.get()
+}
+
 export const server = {
   getStatus: async (ip: string, port?: number) => await window.api.server.getStatus(ip, port)
 }
@@ -129,7 +137,7 @@ export const bootstraps = {
 }
 
 export const game = {
-  launch: async (payload: { account: Account; settings: IGameSettings }) => await window.api.game.launch(payload),
+  launch: async (payload: { account: Account; settings: IGameSettings, profileSlug: string }) => await window.api.game.launch(payload),
   launchComputeDownload: (callback: () => void) => window.api.game.launchComputeDownload(callback),
   launchDownload: (callback: (value: LauncherEvents['launch_download'][0]) => void) => window.api.game.launchDownload(callback),
   downloadProgress: (callback: (value: DownloaderEvents['download_progress'][0]) => void) => window.api.game.downloadProgress(callback),
