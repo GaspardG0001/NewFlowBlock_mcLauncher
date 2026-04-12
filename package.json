@@ -40,7 +40,7 @@
     ],
     "publish": {
       "provider": "generic",
-      "url": "https://emlproject.qzz.io/"
+      "url": "https://emlproject.pages.dev/"
     },
     "win": {
       "target": "nsis",
