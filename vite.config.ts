@@ -13,6 +13,12 @@ export default defineConfig({
       },
       {
         entry: 'electron/preload.ts',
+        vite: {
+          build: {
+            outDir: 'dist-electron',
+            emptyOutDir: false
+          }
+        },
         onstart(options) {
           options.reload()
         }
@@ -20,3 +26,4 @@ export default defineConfig({
     ])
   ]
 })
+

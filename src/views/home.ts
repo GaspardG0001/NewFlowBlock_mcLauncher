@@ -1,5 +1,5 @@
 import { setView, getUser } from '../state'
-import { game, news, server, settings } from '../ipc'
+import { game, news, server, settings, profiles } from '../ipc'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
 import logger from 'electron-log/renderer'
@@ -19,9 +19,10 @@ const formatDate = (dateString: string) => {
   return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-const parseNews = (rawContent: string) => DOMPurify.sanitize(marked.parse(rawContent) as string, {
-  ADD_ATTR: ['target']
-})
+const parseNews = (rawContent: string) =>
+  DOMPurify.sanitize(marked.parse(rawContent) as string, {
+    ADD_ATTR: ['target']
+  })
 
 const backgroundColor = (color: string) => {
   const r = parseInt(color.slice(1, 3), 16)
@@ -31,6 +32,7 @@ const backgroundColor = (color: string) => {
 }
 
 export function initHome() {
+  const body = document.body
   const playBtn = document.getElementById('btn-play')
   const settingsBtn = document.getElementById('btn-settings')
   const progressContainer = document.getElementById('launch-progress-container')
@@ -41,9 +43,51 @@ export function initHome() {
   const statusText = document.getElementById('server-status-text')
   const playerCount = document.getElementById('player-count')
   const newsList = document.getElementById('news-list')
+  const profileSelector = document.getElementById('profile-selector')
+  const profileDropdown = document.getElementById('profile-dropdown')
+  const currentProfileName = document.getElementById('current-profile-name')
 
+  let selectedProfile: any = null
+  let allProfiles: any[] = []
   let totalToDownload = 0
   let totalDownloadedByType: { type: string; size: number }[] = []
+
+  const loadProfiles = async () => {
+    allProfiles = await profiles.get()
+    if (allProfiles.length > 0) {
+      selectProfile(allProfiles[0])
+      renderDropdown()
+    }
+  }
+
+  const renderDropdown = () => {
+    if (!profileDropdown) return
+    profileDropdown.innerHTML = allProfiles
+      .map(
+        (p) => `
+      <div class="profile-option ${selectedProfile?.id === p.id ? 'active' : ''}" data-id="${p.id}">
+        ${p.name}
+      </div>
+    `
+      )
+      .join('')
+
+    profileDropdown.querySelectorAll('.profile-option').forEach((opt) => {
+      opt.addEventListener('click', (e) => {
+        const id = (e.target as HTMLElement).dataset.id
+        const profile = allProfiles.find((p) => p.id === id)
+        if (profile) selectProfile(profile)
+        profileSelector?.classList.remove('open')
+      })
+    })
+  }
+
+  const selectProfile = (profile: any) => {
+    selectedProfile = profile
+    if (currentProfileName) currentProfileName.innerText = profile.name
+    renderDropdown()
+    updateServerStatus()
+  }
 
   const updateServerStatus = async () => {
     if (statusDot) {
@@ -53,7 +97,7 @@ export function initHome() {
     if (statusText) statusText.innerHTML = 'Pinging...'
     if (playerCount) playerCount.innerHTML = ''
 
-    const status = await server.getStatus('mc.hypixel.net', 25565)
+    const status = selectedProfile ? await server.getStatus(selectedProfile.ip, selectedProfile.port || 25565) : null
 
     if (status) {
       if (statusDot) {
@@ -119,6 +163,7 @@ export function initHome() {
     })
   }
 
+  loadProfiles()
   updateServerStatus()
   loadNews()
 
@@ -161,7 +206,17 @@ Ready to launch the game with the following settings:
     `
 
     logger.log(message)
-    game.launch({ account: user, settings: config })
+    game.launch({ account: user, settings: config, profileSlug: selectedProfile?.slug })
+  })
+
+  profileSelector?.querySelector('.selected-profile')?.addEventListener('click', () => {
+    profileSelector.classList.toggle('open')
+  })
+
+  body.addEventListener('click', (e) => {
+    if (!profileSelector?.contains(e.target as Node)) {
+      profileSelector?.classList.remove('open')
+    }
   })
 
   game.launchComputeDownload(() => {
@@ -217,3 +272,8 @@ Ready to launch the game with the following settings:
     }, 10000)
   })
 }
+
+
+
+
+

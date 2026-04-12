@@ -1,6 +1,5 @@
 import { app, BrowserWindow, Menu, nativeTheme, shell } from 'electron'
 import path from 'node:path'
-import { fileURLToPath } from 'node:url'
 import { registerAuthHandlers } from './handlers/auth'
 import { registerLauncherHandlers } from './handlers/launcher'
 import { registerSettingsHandlers } from './handlers/settings'
@@ -10,12 +9,10 @@ import { registerBackgroundHandlers } from './handlers/background'
 import { registerMaintenanceHandlers } from './handlers/maintenance'
 import { registerBootstrapHandlers } from './handlers/bootstraps'
 import logger from 'electron-log/main'
+import { registerProfilesHandlers } from './handlers/profiles'
 
 const APP_TITLE = 'EML Template'
 const BG_COLOR = '#121212'
-
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
 
 let mainWindow: BrowserWindow | null = null
 
@@ -116,6 +113,7 @@ app.whenReady().then(() => {
 
   if (mainWindow) {
     registerAuthHandlers(mainWindow)
+    registerProfilesHandlers()
     registerServerHandlers()
     registerNewsHandlers()
     registerBackgroundHandlers()
@@ -129,3 +127,6 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   app.quit()
 })
+
+
+

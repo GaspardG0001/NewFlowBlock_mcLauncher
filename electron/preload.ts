@@ -17,14 +17,20 @@ import type {
   PatcherEvents
 } from 'eml-lib'
 
+console.log('Preload script loaded')
+
 contextBridge.exposeInMainWorld('api', {
   auth: {
     login: (): Promise<IAuthResponse> => ipcRenderer.invoke('auth:login'),
     refresh: (): Promise<IAuthResponse> => ipcRenderer.invoke('auth:refresh'),
     logout: (): Promise<{ success: boolean }> => ipcRenderer.invoke('auth:logout')
   },
+  profiles: {
+    get: (): Promise<any[]> => ipcRenderer.invoke('profiles:get')
+  },
+
   game: {
-    launch: (payload: { account: Account; settings: IGameSettings }) => {
+    launch: (payload: { account: Account; settings: IGameSettings, profileSlug: string }) => {
       ipcRenderer.invoke('game:launch', payload)
     },
 
