@@ -4,7 +4,7 @@
 
 Powered by <a href="https://github.com/Electron-Minecraft-Launcher/EML-Lib-v2"><b>EML Lib</b></a> • Configurable via <a href="https://github.com/Electron-Minecraft-Launcher/EML-AdminTool-v2"><b>EML AdminTool</b></a>
 
-![EML AdminTool](./.github/assets/screenshot.png)
+![EML Template](./.github/assets/screenshot.png)
 
 [<p align="center"><img src="https://img.shields.io/badge/Discord-EML-5561e6?&style=for-the-badge">](https://discord.gg/YVB4k6HzAY)
 [<img src="https://img.shields.io/badge/platforms-Windows,_macOS,_Linux-0077DA?style=for-the-badge&color=0077DA">](#platforms)
