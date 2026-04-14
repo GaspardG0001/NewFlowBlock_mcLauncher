@@ -80,6 +80,17 @@ a {
   }
 }
 
+.bi-fw {
+  display: inline-block;
+  width: 1.25em;
+  text-align: center;
+}
+
+.spin {
+  display: inline-block;
+  animation: spin 1s linear infinite;
+}
+
 .hidden {
   display: none !important;
 }

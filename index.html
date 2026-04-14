@@ -64,7 +64,7 @@
   <body>
     <div id="view-loading" class="loading" data-view="loading">
       <div class="loading-card">
-        <p class="spinner"><i class="bi bi-arrow-clockwise fa-spin"></i></p>
+        <p class="spinner"><i class="bi bi-arrow-clockwise spin"></i></p>
         <p class="text">Loading...</p>
       </div>
     </div>
@@ -126,14 +126,14 @@
               </div>
             </div>
 
-            <button id="btn-settings" class="btn btn-secondary" title="Settings"><i class="fa-fw fa-solid fa-gear"></i></button>
+            <button id="btn-settings" class="btn btn-secondary" title="Settings"><i class="bi bi-fw bi-gear-fill"></i></button>
           </div>
 
           <div class="sidebar-middle">
             <h3 class="shop-header">
               <span>Shop</span>
               <span class="shop-link">
-                <a href="https://emlproject.pages.dev" target="_blank"><i class="fa-fw fa-solid fa-cart-shopping"></i> Visit shop...</a>
+                <a href="https://emlproject.pages.dev" target="_blank"><i class="bi bi-fw bi-cart-fill"></i> Visit shop...</a>
               </span>
             </h3>
             <div class="shop-item">
@@ -170,7 +170,7 @@
             <div class="profile-selector-container" id="profile-selector">
               <div class="selected-profile">
                 <span id="current-profile-name">Select Profile</span>
-                <i class="fa-solid fa-chevron-down"></i>
+                <i class="bi bi-chevron-down"></i>
               </div>
               <div class="profile-dropdown" id="profile-dropdown"></div>
             </div>
@@ -203,9 +203,9 @@
           <div class="news-header">
             <h2>News feed</h2>
             <div class="social-links">
-              <a href="https://discord.gg/YVB4k6HzAY" target="_blank" class="btn btn-icon-only"><i class="fa-brands fa-discord"></i></a>
-              <a href="https://twitter.com/EMLProject" target="_blank" class="btn btn-icon-only"><i class="fa-brands fa-x-twitter"></i></a>
-              <a href="https://emlproject.pages.dev" target="_blank" class="btn btn-icon-only"><i class="fa-solid fa-globe"></i></a>
+              <a href="https://discord.gg/YVB4k6HzAY" target="_blank" class="btn btn-icon-only"><i class="bi bi-discord"></i></a>
+              <a href="https://twitter.com/EMLProject" target="_blank" class="btn btn-icon-only"><i class="bi bi-twitter-x"></i></a>
+              <a href="https://emlproject.pages.dev" target="_blank" class="btn btn-icon-only"><i class="bi bi-globe"></i></a>
             </div>
           </div>
 
@@ -218,14 +218,14 @@
       <div id="view-settings" class="view overlay" data-view="settings">
         <div class="settings-modal">
           <button id="btn-close-settings" class="btn btn-icon-only btn-close-absolute">
-            <i class="fa-fw fa-solid fa-xmark"></i>
+            <i class="bi bi-fw bi-x-lg"></i>
           </button>
 
           <aside class="settings-sidebar">
             <h2>Settings</h2>
             <nav>
-              <button class="btn nav-btn active" data-tab="game"><i class="fa-fw fa-solid fa-cubes"></i><span>Game</span></button>
-              <button class="btn nav-btn" data-tab="account"><i class="fa-fw fa-solid fa-user"></i><span>Account</span></button>
+              <button class="btn nav-btn active" data-tab="game"><i class="bi bi-fw bi-boxes"></i><span>Game</span></button>
+              <button class="btn nav-btn" data-tab="account"><i class="bi bi-fw bi-person-fill"></i><span>Account</span></button>
             </nav>
             <p id="version"></p>
           </aside>
@@ -235,7 +235,7 @@
               <h3>Minecraft configuration</h3>
 
               <div class="setting-group">
-                <label><i class="fa-fw fa-solid fa-memory"></i>&nbsp;&nbsp;Allocated RAM</label>
+                <label><i class="bi bi-fw bi-memory"></i>&nbsp;&nbsp;Allocated RAM</label>
 
                 <div class="dual-slider-container">
                   <div class="slider-track"></div>
@@ -252,12 +252,12 @@
               </div>
 
               <div class="setting-group">
-                <label><i class="fa-fw fa-solid fa-display"></i>&nbsp;&nbsp;Window size</label>
+                <label><i class="bi bi-fw bi-display"></i>&nbsp;&nbsp;Window size</label>
                 <select id="resolution-select"></select>
               </div>
 
               <div class="setting-group">
-                <label for="launcher-action"><i class="fa-solid fa-power-off"></i>&nbsp;&nbsp;Action after launch</label>
+                <label for="launcher-action"><i class="bi bi-power"></i>&nbsp;&nbsp;Action after launch</label>
                 <div class="select-wrapper">
                   <select id="launcher-action-select">
                     <option value="close">Close launcher</option>
@@ -268,7 +268,7 @@
               </div>
 
               <div class="setting-group">
-                <label><i class="fa-brands fa-java"></i>&nbsp;&nbsp;Java version</label>
+                <label><i class="bi bi-filetype-java"></i>&nbsp;&nbsp;Java version</label>
                 <div class="java-selector">
                   <select id="java-select">
                     <option value="bundled">Use bundled Java (recommended)</option>
@@ -287,15 +287,15 @@
                   <div class="account-details">
                     <span class="account-name" id="settings-user-name">GoldFrite</span>
                     <span class="account-uuid" id="settings-user-uuid">UUID: 550e8400-e29b...</span>
-                    <span class="account-type" id="settings-user-type"><i class="fa-brands fa-microsoft"></i>&nbsp;&nbsp;Microsoft Account</span>
+                    <span class="account-type" id="settings-user-type"><i class="bi bi-microsoft"></i>&nbsp;&nbsp;Microsoft Account</span>
                   </div>
                 </div>
 
                 <div class="account-actions">
                   <a href="https://www.xbox.com/play/user" target="_blank" class="btn btn-secondary">
-                    <i class="fa-fw fa-solid fa-external-link-alt"></i><span>Manage Xbox Account</span>
+                    <i class="bi bi-fw bi-box-arrow-up-right"></i><span>Manage Xbox Account</span>
                   </a>
-                  <button id="btn-logout" class="btn btn-danger"><i class="fa-fw fa-solid fa-right-from-bracket"></i><span>Log out</span></button>
+                  <button id="btn-logout" class="btn btn-danger"><i class="bi bi-fw bi-box-arrow-right"></i><span>Log out</span></button>
                 </div>
               </div>
             </section>

@@ -12,7 +12,7 @@ export function initLogin() {
     const originalText = btn.innerHTML
 
     btn.disabled = true
-    btn.innerHTML = '<i class="bi bi-circle-notch fa-spin"></i> Connexion en cours...'
+    btn.innerHTML = '<i class="bi bi-circle-notch spin"></i> Connexion en cours...'
 
     try {
       const session = await auth.login()

@@ -107,7 +107,7 @@ export function initHome() {
       if (statusText) statusText.innerHTML = 'Online'
 
       if (playerCount) {
-        playerCount.innerHTML = `<i class="fa-fw fa-solid fa-users"></i>&nbsp;&nbsp;${status.players.online.toLocaleString()} / ${status.players.max.toLocaleString()}`
+        playerCount.innerHTML = `<i class="bi bi-fw bi-people-fill"></i>&nbsp;&nbsp;${status.players.online.toLocaleString()} / ${status.players.max.toLocaleString()}`
       }
     } else {
       if (statusDot) {
