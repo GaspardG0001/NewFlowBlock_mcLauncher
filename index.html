@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>EML Template</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.1/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css" />
     <style>
       body {
         background-color: #121212;
@@ -64,14 +64,14 @@
   <body>
     <div id="view-loading" class="loading" data-view="loading">
       <div class="loading-card">
-        <p class="spinner"><i class="fa-solid fa-circle-notch fa-spin"></i></p>
+        <p class="spinner"><i class="bi bi-arrow-clockwise fa-spin"></i></p>
         <p class="text">Loading...</p>
       </div>
     </div>
 
     <div id="view-maintenance" class="maintenance" data-view="maintenance">
       <div class="maintenance-card">
-        <p class="gears"><i class="fa-solid fa-gears"></i></p>
+        <p class="gears"><i class="bi bi-gear"></i></p>
         <h3>Maintenance</h3>
         <p class="dates" id="maintenance-dates"></p>
         <p class="text" id="maintenance-reason"></p>
@@ -80,7 +80,7 @@
 
     <div id="view-update" class="update" data-view="update">
       <div class="maintenance-card">
-        <p class="up"><i class="fa-solid fa-circle-up"></i></p>
+        <p class="up"><i class="bi bi-arrow-up"></i></p>
         <h3>An update is available</h3>
         <p class="text" id="update-text">Please wait while we update your launcher...</p>
         <div class="progress-container" id="update-progress-container">
@@ -101,16 +101,16 @@
       <div id="view-login" class="view" data-view="login">
         <div class="login-card">
           <img src="/src/static/images/logo.png" class="logo" alt="Logo" />
-          <h1>Welcome</h1>
-          <p class="subtitle">Log in to verify your access.</p>
+          <h1>Bienvenue</h1>
+          <p class="subtitle">Connectez-vous pour jouer !</p>
 
           <button id="btn-login-ms" class="btn btn-microsoft">
-            <i class="fa-brands fa-microsoft"></i>
-            <span>Sign in with Microsoft</span>
+            <i class="bi bi-microsoft"></i>
+            <span>Se connecter avec Microsoft</span>
           </button>
 
           <div class="login-footer">
-            <small>No account yet? <a href="https://microsoft.com">Create one here</a></small>
+            <small>Vous n'avez pas encore Minecraft ? <a href="https://www.minecraft.net/fr-fr/store/minecraft-java-bedrock-edition-pc?tabs=%7B%22details%22%3A0%7D" rel="noopener noreferrer" target="_blank">Achetez le ici</a></small>
           </div>
         </div>
       </div>

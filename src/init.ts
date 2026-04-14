@@ -4,6 +4,8 @@ import logger from 'electron-log/renderer'
 // import _mockSession from './_mock-msa'
 
 const DEFAULT_BACKGROUND = '/src/static/images/bg.png'
+const DEFAULT_LOGO = '/src/static/images/logo.png'
+const REMOTE_LOGO = 'https://mcflowblock.com/eml-logo'
 const dateFormatOptions: Intl.DateTimeFormatOptions = {
   day: '2-digit',
   month: '2-digit',
@@ -21,6 +23,15 @@ function preloadImage(url: string): Promise<void> {
   })
 }
 
+function resolveImageWithFallback(primaryUrl: string, fallbackUrl: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.src = primaryUrl
+    img.onload = () => resolve(primaryUrl)
+    img.onerror = () => resolve(fallbackUrl)
+  })
+}
+
 export async function bootstrap() {
   logger.log('Initializing Launcher...')
 
@@ -30,6 +41,7 @@ export async function bootstrap() {
   const progressBar = document.getElementById('update-progress-bar')
   const progressLabel = document.getElementById('update-progress-label')
   const progressPercent = document.getElementById('update-progress-percent')
+  const logoElement = document.querySelector('.logo') as HTMLImageElement | null
 
   const setIndeterminate = (active: boolean) => {
     if (!progressBar || !progressPercent) return
@@ -47,6 +59,7 @@ export async function bootstrap() {
   const bg = await background.get()
   const mn = await maintenance.get()
   const bgUrl = bg?.file?.url ?? DEFAULT_BACKGROUND
+  const logoUrl = await resolveImageWithFallback(REMOTE_LOGO, DEFAULT_LOGO)
 
   if (up.updateAvailable) {
     setIndeterminate(false)
@@ -87,13 +100,15 @@ export async function bootstrap() {
     return
   }
   try {
-    const [_, session] = await Promise.all([
+    const [_, __, session] = await Promise.all([
       preloadImage(bgUrl),
+      preloadImage(logoUrl),
       auth.refresh()
       // Promise.resolve(_mockSession)
     ])
 
     if (bgElement) bgElement.style.backgroundImage = `url('${bgUrl}')`
+    if (logoElement) logoElement.src = logoUrl
 
     if (session.success) {
       setUser(session.account)
@@ -104,6 +119,7 @@ export async function bootstrap() {
   } catch (err) {
     logger.error('Error while itializing launcher:', err)
     if (bgElement) bgElement.style.backgroundImage = `url('${DEFAULT_BACKGROUND}')`
+    if (logoElement) logoElement.src = DEFAULT_LOGO
     setView('login')
   } finally {
     await new Promise((resolve) => setTimeout(resolve, 400))

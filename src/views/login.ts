@@ -12,7 +12,7 @@ export function initLogin() {
     const originalText = btn.innerHTML
 
     btn.disabled = true
-    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Connecting...'
+    btn.innerHTML = '<i class="bi bi-circle-notch fa-spin"></i> Connexion en cours...'
 
     try {
       const session = await auth.login()
@@ -23,11 +23,11 @@ export function initLogin() {
         setView('home')
       } else {
         logger.error(session.error)
-        await Dialog.show('Login failed', [{ text: 'OK', type: 'ok' }])
+        await Dialog.show('Une erreur est survenue lors de la connexion.', [{ text: 'Réessayer', type: 'ok' }])
       }
     } catch (err) {
       logger.error(err)
-      await Dialog.show('An error occurred during login.', [{ text: 'OK', type: 'ok' }])
+      await Dialog.show('Une erreur est survenue lors de la connexion.', [{ text: 'Réessayer', type: 'ok' }])
     } finally {
       btn.disabled = false
       btn.innerHTML = originalText
