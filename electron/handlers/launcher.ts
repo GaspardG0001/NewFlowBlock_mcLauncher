@@ -11,6 +11,8 @@ export function registerLauncherHandlers(mainWindow: BrowserWindow) {
     const java = settings.java === 'system' ? { install: 'manual' as const, absolutePath: 'java' } : { install: 'auto' as const }
     logger.log('Launching')
 
+    console.log(settings.memory)
+
     const launcher = new Launcher({
       url: ADMINTOOL_URL,
       root: 'goldfrite',
