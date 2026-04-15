@@ -117,8 +117,8 @@ function initFormValues(resolution: { width: number; height: number }) {
   const launcherActionSelect = document.getElementById('launcher-action-select') as HTMLSelectElement
   const javaSelect = document.getElementById('java-select') as HTMLSelectElement
 
-  if (minInput) minInput.value = currentSettings.memory.min.replace('G', '')
-  if (maxInput) maxInput.value = currentSettings.memory.max.replace('G', '')
+  if (minInput) minInput.value = currentSettings.memory.min + ''
+  if (maxInput) maxInput.value = currentSettings.memory.max + ''
   if (resolutionSelect) {
     const availableResolutions = getAvailableResolutions(resolution)
     resolutionSelect.innerHTML = ''
@@ -149,8 +149,8 @@ async function saveSettings() {
   const newSettings: IGameSettings = {
     ...currentSettings,
     memory: {
-      min: `${minInput.value}G`,
-      max: `${maxInput.value}G`
+      min: parseFloat(minInput.value),
+      max: parseFloat(maxInput.value)
     },
     resolution: {
       height: resolutionList.find((r) => r.value === resolutionSelect.value)?.height ?? 854,
