@@ -6,13 +6,13 @@ Powered by <a href="https://github.com/Electron-Minecraft-Launcher/EML-Lib-v2"><
 
 ![EML Template](./.github/assets/screenshot.png)
 
-[<p align="center"><img src="https://img.shields.io/badge/Discord-EML-5561e6?&style=for-the-badge">](https://discord.gg/YVB4k6HzAY)
+[<p align="center"><img src="https://img.shields.io/badge/Discord-EML-5561e6?&style=for-the-badge">](https://emlproject.com/discord/github)
 [<img src="https://img.shields.io/badge/platforms-Windows,_macOS,_Linux-0077DA?style=for-the-badge&color=0077DA">](#platforms)
 [<img src="https://img.shields.io/badge/version-1.1.1-orangered?style=for-the-badge&color=orangered">](package.json)</p>
 
 <p>
 <center>
-<a href="https://discord.gg/YVB4k6HzAY">
+<a href="https://emlproject.com/discord/github">
   <img src="./.github/assets/gg.png" alt="EML AdminTool Logo" width="300"/>
 </a>
 </center>
