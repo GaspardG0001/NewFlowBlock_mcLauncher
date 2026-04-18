@@ -135,9 +135,24 @@
 
           <button id="btn-settings" class="btn btn-secondary" title="Paramètres"><i class="bi bi-fw bi-gear-fill"></i></button>
         </div>
+        </aside>
 
-          <!-- <div class="sidebar-bottom">
-            <div class="profile-selector-container" id="profile-selector">
+        <main class="home-content">
+          <section class="server-details">
+            <div class="server-status-block">
+              <div class="server-status">
+                <div class="status-indicator" id="server-status-indicator">
+                  <div class="status-dot pinging" id="server-status-dot"></div>
+                </div>
+                <div class="player-count" id="player-count"></div>
+              </div>
+              <a href="https://status.mcflowblock.com" target="_blank" rel="noopener noreferrer" class="status-link">Voir le statut du serveur <i class="bi bi-box-arrow-up-right"></i></a>
+            </div>
+        
+            <div class="server-profile">
+              <h2 class="server-name" id="current-profile-name">FlowBlock_mc</h2>
+
+              <div class="profile-selector-container" id="profile-selector">
               <div class="selected-profile">
                 <span id="current-profile-name">Sélectionner un profil</span>
                 <i class="bi bi-chevron-down"></i>
@@ -145,15 +160,7 @@
               <div class="profile-dropdown" id="profile-dropdown"></div>
             </div>
 
-            <div class="server-status">
-              <div class="status-indicator" id="server-status-indicator">
-                <div class="status-dot pinging" id="server-status-dot"></div>
-                <span class="status-text" id="server-status-text">Ping en cours...</span>
-              </div>
-              <div class="player-count" id="player-count"></div>
-            </div>
-
-            <div class="launch-area">
+              <div class="launch-area">
               <button id="btn-play">JOUER</button>
 
               <div class="progress-container hidden" id="launch-progress-container">
@@ -166,22 +173,9 @@
                 </div>
               </div>
             </div>
-          </div> -->
-        </aside>
 
-        <main class="home-content">
-          <div class="news-header">
-            <h2>Fil d'actualités</h2>
-            <div class="social-links">
-              <a href="https://emlproject.com/discord/other" target="_blank" class="btn btn-icon-only"><i class="fa-brands fa-discord"></i></a>
-              <a href="https://x.com/EMLProject" target="_blank" class="btn btn-icon-only"><i class="fa-brands fa-x-twitter"></i></a>
-              <a href="https://emlproject.com" target="_blank" class="btn btn-icon-only"><i class="fa-solid fa-globe"></i></a>
             </div>
-          </div>
-
-          <hr />
-
-          <div class="news-list" id="news-list"></div>
+          </section>
         </main>
       </div>
 

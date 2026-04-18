@@ -1,9 +1,33 @@
 /* --- HOME LAYOUT --- */
 #view-home {
+  position: relative;
+  isolation: isolate;
   display: flex;
   flex-direction: row;
   height: 100vh;
   width: 100vw;
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    /* Black veil that rises from the bottom and fades out around half the viewport. */
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.88) 0%,
+      rgba(0, 0, 0, 0.72) 14%,
+      rgba(0, 0, 0, 0.5) 28%,
+      rgba(0, 0, 0, 0.22) 40%,
+      rgba(0, 0, 0, 0) 50%
+    );
+  }
+
+  > * {
+    position: relative;
+    z-index: 2;
+  }
 }
 
 /* --- LEFT SIDEBAR (Technical) --- */
@@ -82,10 +106,12 @@
 .profile-selector-container {
   position: relative;
   user-select: none;
+  width: 300px;
 
   .selected-profile {
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
     padding: 10px 15px;
     border-radius: 8px;
     display: flex;
@@ -107,7 +133,7 @@
   }
 
   &.open .selected-profile {
-    border-radius: 0 0 8px 8px;
+    border-radius: 8px 8px 0 0;
 
     i {
       transform: rotate(180deg);
@@ -116,12 +142,12 @@
 
   .profile-dropdown {
     position: absolute;
-    bottom: 100%;
+    top: 100%;
     left: 0;
     right: 0;
     background: #1a1a1a;
     border: 1px solid var(--glass-border);
-    border-radius: 8px 8px 0 0;
+    border-radius: 0 0 8px 8px;
     box-shadow: 0 -10px 25px rgba(0, 0, 0, 0.5);
     display: none;
     z-index: 100;
@@ -154,12 +180,39 @@
   }
 }
 
+.server-status-block {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+
+  .status-link {
+  color: var(--text-main);
+  font-weight: 800;
+  text-decoration: none;
+  font-size: 12px;
+
+    &:hover {
+      color: var(--primary);
+    }
+  }
+
+}
+
 .server-status {
   display: flex;
-  justify-content: space-between;
+  justify-content: start;
+  gap: 10px;
+  width: 300px;
+  border-radius: 5px;
+  height: 35px;
   align-items: center;
   padding: 12px 10px;
   font-size: 13px;
+  background: var(--glass-bg);
+  backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid var(--glass-border);
 
   .status-indicator {
     display: flex;
@@ -210,8 +263,8 @@
 
 /* Play Button - Special Case */
 #btn-play {
-  width: 100%;
-  height: 60px;
+  width: 300px;
+  height: 50px;
   background: var(--primary);
   border: none;
   color: white;
@@ -221,9 +274,6 @@
   letter-spacing: 1px;
   cursor: pointer;
   border-radius: var(--btn-radius);
-  /* Slight radius */
-  /* Keeps the polygon shape but respects consistent font */
-  clip-path: polygon(15px 0, 100% 0, 100% calc(100% - 15px), calc(100% - 15px) 100%, 0 100%, 0 15px);
   transition: all 0.2s;
   box-shadow: var(--shadow-lg);
 
@@ -238,6 +288,7 @@
 }
 
 .progress-container {
+  width: 300px;
   margin-top: 20px;
   height: 40px;
 
@@ -287,10 +338,31 @@
 /* --- RIGHT CONTENT (News Feed) --- */
 .home-content {
   flex: 1;
-  padding: 40px 0 0 0;
+  padding: 60px 60px;
   display: flex;
   flex-direction: column;
+  justify-content: end;
   overflow-y: auto;
+  
+  .server-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 30px;
+
+    .server-profile {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+
+      h2 {
+        font-size: 32px;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+        color: white;
+      }
+    }
+  }
 
   hr {
     border: 0;
