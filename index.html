@@ -122,55 +122,25 @@
       <div id="view-home" class="view" data-view="home">
         <aside class="home-sidebar">
           <div class="sidebar-top">
-            <div class="user-profile">
-              <img src="https://minotar.net/helm/Steve/50" id="user-avatar" alt="Skin" />
-              <div class="user-details">
+            <div class="sidebar-logo">
+              <img src="/src/static/images/logo.png" class="logo" alt="Logo" />
+            </div>
+            <hr>
+          </div>
+          
+        <div class="sidebar-bottom">
+          <button class="btn btn-secondary" id="btn-profile">
+            <img src="https://minotar.net/cube/Steve/50" id="user-avatar" alt="Skin" title="Voir mon compte" />
+              <!-- <div class="user-details">
                 <span id="user-name">Inconnu</span>
                 <span class="rank-badge">Membre</span>
-              </div>
-            </div>
+              </div> -->
+          </button>
 
-            <button id="btn-settings" class="btn btn-secondary" title="Paramètres"><i class="bi bi-fw bi-gear-fill"></i></button>
-          </div>
+          <button id="btn-settings" class="btn btn-secondary" title="Paramètres"><i class="bi bi-fw bi-gear-fill"></i></button>
+        </div>
 
-          <div class="sidebar-middle">
-            <h3 class="shop-header">
-              <span>Boutique</span>
-              <span class="shop-link">
-                <a href="https://emlproject.pages.dev" target="_blank" rel="noopener noreferrer"><i class="bi bi-fw bi-cart-fill"></i> Visiter la boutique...</a>
-              </span>
-            </h3>
-            <div class="shop-item">
-              <img src="src/static/images/gold.png" class="shop-item-image" alt="Rang Or" />
-              <div class="shop-item-details">
-                <span class="item-name">Rang Or</span>
-                <span class="item-price">$9.99</span>
-              </div>
-            </div>
-            <div class="shop-item">
-              <img src="src/static/images/silver.png" class="shop-item-image" alt="Rang Argent" />
-              <div class="shop-item-details">
-                <span class="item-name">Rang Argent</span>
-                <span class="item-price">$6.99</span>
-              </div>
-            </div>
-            <div class="shop-item">
-              <img src="src/static/images/bronze.png" class="shop-item-image" alt="Rang Bronze" />
-              <div class="shop-item-details">
-                <span class="item-name">Rang Bronze</span>
-                <span class="item-price">$3.99</span>
-              </div>
-            </div>
-            <div class="shop-item">
-              <img src="src/static/images/box.png" class="shop-item-image" alt="Boîte mystère" />
-              <div class="shop-item-details">
-                <span class="item-name">Boîte mystère</span>
-                <span class="item-price">$5.99</span>
-              </div>
-            </div>
-          </div>
-
-          <div class="sidebar-bottom">
+          <!-- <div class="sidebar-bottom">
             <div class="profile-selector-container" id="profile-selector">
               <div class="selected-profile">
                 <span id="current-profile-name">Sélectionner un profil</span>
@@ -200,7 +170,7 @@
                 </div>
               </div>
             </div>
-          </div>
+          </div> -->
         </aside>
 
         <main class="home-content">
@@ -228,13 +198,38 @@
           <aside class="settings-sidebar">
             <h2>Paramètres</h2>
             <nav>
-              <button class="btn nav-btn active" data-tab="game"><i class="bi bi-fw bi-boxes"></i><span>Jeu</span></button>
               <button class="btn nav-btn" data-tab="account"><i class="bi bi-fw bi-person-fill"></i><span>Compte</span></button>
+              <button class="btn nav-btn active" data-tab="game"><i class="bi bi-fw bi-boxes"></i><span>Jeu</span></button>
             </nav>
             <p id="version"></p>
           </aside>
 
           <main class="settings-content">
+            <section id="tab-account" class="tab-content">
+              <h3>Gestion du compte</h3>
+
+              <div class="account-card">
+                <div class="account-header">
+                  <img src="https://minotar.net/helm/GoldFrite/80" alt="Skin" class="account-avatar" />
+                  <div class="account-details">
+                    <div class="account-primary">
+                      <span class="account-name" id="settings-user-name">GoldFrite</span>
+                      <span class="rank-badge">Membre</span>
+                    </div>
+                    <span class="account-uuid" id="settings-user-uuid">UUID: 550e8400-e29b...</span>
+                    <span class="account-type" id="settings-user-type"><i class="bi bi-microsoft"></i>&nbsp;&nbsp;Compte Microsoft</span>
+                  </div>
+                </div>
+
+                <div class="account-actions">
+                  <a href="https://www.xbox.com/play/user" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
+                    <i class="bi bi-fw bi-box-arrow-up-right"></i><span>Gérer le compte Xbox</span>
+                  </a>
+                  <button id="btn-logout" class="btn btn-danger"><i class="bi bi-fw bi-box-arrow-right"></i><span>Se déconnecter</span></button>
+                </div>
+              </div>
+            </section>
+
             <section id="tab-game" class="tab-content active">
               <h3>Configuration de Minecraft</h3>
 
@@ -278,28 +273,6 @@
                     <option value="bundled">Utiliser Java intégrée (recommandé)</option>
                     <option value="system">Utiliser Java système (PATH)</option>
                   </select>
-                </div>
-              </div>
-            </section>
-
-            <section id="tab-account" class="tab-content">
-              <h3>Gestion du compte</h3>
-
-              <div class="account-card">
-                <div class="account-header">
-                  <img src="https://minotar.net/helm/GoldFrite/80" alt="Skin" class="account-avatar" />
-                  <div class="account-details">
-                    <span class="account-name" id="settings-user-name">GoldFrite</span>
-                    <span class="account-uuid" id="settings-user-uuid">UUID: 550e8400-e29b...</span>
-                    <span class="account-type" id="settings-user-type"><i class="bi bi-microsoft"></i>&nbsp;&nbsp;Compte Microsoft</span>
-                  </div>
-                </div>
-
-                <div class="account-actions">
-                  <a href="https://www.xbox.com/play/user" target="_blank" rel="noopener noreferrer" class="btn btn-secondary">
-                    <i class="bi bi-fw bi-box-arrow-up-right"></i><span>Gérer le compte Xbox</span>
-                  </a>
-                  <button id="btn-logout" class="btn btn-danger"><i class="bi bi-fw bi-box-arrow-right"></i><span>Se déconnecter</span></button>
                 </div>
               </div>
             </section>

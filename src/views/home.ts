@@ -1,4 +1,4 @@
-import { setView, getUser } from '../state'
+import { setViewWithTab, getUser } from '../state'
 import { game, news, server, settings, profiles } from '../ipc'
 import { marked } from 'marked'
 import DOMPurify from 'dompurify'
@@ -35,6 +35,7 @@ export function initHome() {
   const body = document.body
   const playBtn = document.getElementById('btn-play')
   const settingsBtn = document.getElementById('btn-settings')
+  const profileBtn = document.getElementById('btn-profile')
   const progressContainer = document.getElementById('launch-progress-container')
   const progressBar = document.getElementById('launch-progress-bar')
   const progressLabel = document.getElementById('launch-progress-label')
@@ -180,7 +181,11 @@ export function initHome() {
   }
 
   settingsBtn?.addEventListener('click', () => {
-    setView('settings')
+    setViewWithTab('settings', 'game')
+  })
+
+  profileBtn?.addEventListener('click', async () => {
+    setViewWithTab('settings', 'account')
   })
 
   playBtn?.addEventListener('click', async () => {
