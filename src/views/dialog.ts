@@ -34,8 +34,8 @@ class DialogSystem {
       }
 
       const configButtons = buttons ?? [
-        { text: 'Cancel', type: 'cancel' },
-        { text: 'OK', type: 'ok' }
+        { text: 'Annuler', type: 'cancel' },
+        { text: 'D’accord', type: 'ok' }
       ]
 
       configButtons.forEach((btnConfig) => {
@@ -59,7 +59,7 @@ class DialogSystem {
                 resolve(true as any)
                 break
               case 'other':
-                logger.warn("The 'other' type button requires an action!")
+                logger.warn("Le bouton de type 'other' nécessite une action !")
                 resolve(null as any)
                 break
             }

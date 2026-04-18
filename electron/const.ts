@@ -1,1 +1,1 @@
-export const ADMINTOOL_URL = 'http://localhost:5173'
+export const ADMINTOOL_URL = 'https://eml.mcflowblock.com/'
