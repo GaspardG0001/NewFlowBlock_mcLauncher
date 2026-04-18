@@ -16,7 +16,7 @@ marked.use({
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
-  return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+  return date.toLocaleDateString('fr-FR', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
 const parseNews = (rawContent: string) =>
@@ -94,7 +94,7 @@ export function initHome() {
       statusDot.classList.remove('online', 'offline')
       statusDot.classList.add('pinging')
     }
-    if (statusText) statusText.innerHTML = 'Pinging...'
+    if (statusText) statusText.innerHTML = 'Ping en cours...'
     if (playerCount) playerCount.innerHTML = ''
 
     const status = selectedProfile ? await server.getStatus(selectedProfile.ip, selectedProfile.port || 25565) : null
@@ -104,7 +104,7 @@ export function initHome() {
         statusDot.classList.remove('pinging', 'offline')
         statusDot.classList.add('online')
       }
-      if (statusText) statusText.innerHTML = 'Online'
+      if (statusText) statusText.innerHTML = 'En ligne'
 
       if (playerCount) {
         playerCount.innerHTML = `<i class="bi bi-fw bi-people-fill"></i>&nbsp;&nbsp;${status.players.online.toLocaleString()} / ${status.players.max.toLocaleString()}`
@@ -114,20 +114,20 @@ export function initHome() {
         statusDot.classList.remove('pinging', 'online')
         statusDot.classList.add('offline')
       }
-      if (statusText) statusText.innerHTML = 'Offline'
+      if (statusText) statusText.innerHTML = 'Hors ligne'
       if (playerCount) playerCount.innerHTML = ''
     }
   }
 
   const loadNews = async () => {
     if (!newsList) return
-    newsList.innerHTML = '<div style="text-align:center; padding: 20px; color: #888;">Loading news...</div>'
+    newsList.innerHTML = '<div style="text-align:center; padding: 20px; color: #888;">Chargement des actualités...</div>'
     const feed = await news.getNews()
 
     newsList.innerHTML = ''
 
     if (!feed || feed.length === 0) {
-      newsList.innerHTML = '<div style="text-align:center; color: #888;">No news available.</div>'
+      newsList.innerHTML = '<div style="text-align:center; color: #888;">Aucune actualité disponible.</div>'
       return
     }
 
@@ -140,8 +140,8 @@ export function initHome() {
         <article class="news-article">
           <div class="article-meta">
             <div class="author">
-              <img src="https://minotar.net/helm/${item.author.username}/24" alt="Author" />
-              <span>${item.author.username ?? 'Admin Team'}</span>
+              <img src="https://minotar.net/helm/${item.author.username}/24" alt="Auteur" />
+              <span>${item.author.username ?? 'Équipe admin'}</span>
             </div>
             <span class="separator">•</span>
             <span class="date">${formatDate(item.createdAt)}</span>
@@ -151,7 +151,7 @@ export function initHome() {
 
           <h3>${item.title}</h3>
           
-          ${item.image ? `<img src="${item.image}" alt="News Image" onerror="this.style.display='none'"/>` : ''}
+          ${item.image ? `<img src="${item.image}" alt="Image de l'actualité" onerror="this.style.display='none'"/>` : ''}
 
           <div class="article-content">
             ${parseNews(item.content)}
@@ -196,13 +196,13 @@ export function initHome() {
     const config = await settings.get()
 
     const message = `
-Ready to launch the game with the following settings:
+  Prêt à lancer le jeu avec les paramètres suivants :
       
-👤 Account: ${user.name}
-🧠 RAM: ${config.memory.min} - ${config.memory.max}
-☕️ Java: ${config.java}
-🖥️ Resolution: ${config.resolution.width}x${config.resolution.height}
-🚀 Action on launch: ${config.launcherAction}
+  👤 Compte : ${user.name}
+  🧠 RAM : ${config.memory.min} - ${config.memory.max}
+  ☕️ Java : ${config.java}
+  🖥️ Résolution : ${config.resolution.width}x${config.resolution.height}
+  🚀 Action au lancement : ${config.launcherAction}
     `
 
     logger.log(message)
@@ -221,13 +221,13 @@ Ready to launch the game with the following settings:
 
   game.launchComputeDownload(() => {
     setIndeterminate(true)
-    if (progressLabel) progressLabel.innerText = 'Preparing download...'
+    if (progressLabel) progressLabel.innerText = 'Préparation du téléchargement...'
     if (progressPercent) progressPercent.innerText = ''
   })
   game.launchDownload((download) => {
     setIndeterminate(false)
     totalToDownload = download.total.size
-    if (progressLabel) progressLabel.innerText = `Downloading files...`
+    if (progressLabel) progressLabel.innerText = `Téléchargement des fichiers...`
   })
   game.downloadProgress((progress) => {
     if (!totalDownloadedByType.find((t) => t.type === progress.type)) {
@@ -238,30 +238,30 @@ Ready to launch the game with the following settings:
     if (progressBar && progressLabel && progressPercent) {
       const downloadedSum = totalDownloadedByType.reduce((acc, curr) => acc + curr.size, 0)
       progressBar.style.width = `${Math.min((downloadedSum / totalToDownload) * 100, 100)}%`
-      progressLabel.innerText = `Downloading ${progress.type === 'JAVA' ? 'Java' : 'game files'}...`
+      progressLabel.innerText = `Téléchargement des ${progress.type === 'JAVA' ? 'fichiers Java' : 'fichiers du jeu'}...`
       progressPercent.innerText = `${Math.round(Math.min((downloadedSum / totalToDownload) * 100, 100))}%`
     }
   })
   game.launchInstallLoader(() => {
     setIndeterminate(true)
-    if (progressLabel) progressLabel.innerText = 'Extracting files...'
+    if (progressLabel) progressLabel.innerText = 'Extraction des fichiers...'
     if (progressPercent) progressPercent.innerText = ''
   })
   game.launchExtractNatives(() => {
     setIndeterminate(true)
-    if (progressLabel) progressLabel.innerText = 'Extracting files...'
+    if (progressLabel) progressLabel.innerText = 'Extraction des fichiers...'
   })
   game.launchCopyAssets(() => {
     setIndeterminate(true)
-    if (progressLabel) progressLabel.innerText = 'Extracting files...'
+    if (progressLabel) progressLabel.innerText = 'Extraction des fichiers...'
   })
   game.launchPatchLoader(() => {
     setIndeterminate(true)
-    if (progressLabel) progressLabel.innerText = 'Finalizing setup...'
+    if (progressLabel) progressLabel.innerText = 'Finalisation de l\'installation...'
   })
   game.launchLaunch(() => {
     setIndeterminate(true)
-    if (progressLabel) progressLabel.innerText = 'Launching game...'
+    if (progressLabel) progressLabel.innerText = 'Lancement du jeu...'
   })
   game.launched(() => {
     setTimeout(() => {

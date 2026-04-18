@@ -27,7 +27,7 @@ export function registerBootstrapHandlers(mainWindow: Electron.BrowserWindow) {
     try {
       return await bootstraps?.checkForUpdate()
     } catch (err) {
-      logger.error('Error checking for bootstraps update', err)
+      logger.error('Erreur lors de la vérification de la mise à jour du bootstrap :', err)
       return { updateAvailable: false }
     }
   })

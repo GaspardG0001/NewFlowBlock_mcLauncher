@@ -12,7 +12,7 @@ export function registerProfilesHandlers() {
       const sorted = [list.find((p) => p.isDefault)!, ...list.filter((p) => !p.isDefault)]
       return sorted
     } catch (err) {
-      logger.error('Failed to fetch profiles:', err)
+      logger.error('Échec de la récupération des profils :', err)
       return null
     }
   })

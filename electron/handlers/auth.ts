@@ -18,8 +18,8 @@ export function registerAuthHandlers(mainWindow: Electron.BrowserWindow) {
       fs.writeFileSync(sessionPath, JSON.stringify(account))
       return { success: true, account } as IAuthResponse
     } catch (err: any) {
-      logger.error('Failed to login:', err)
-      return { success: false, error: err.message ?? 'Unknown error' }
+      logger.error('Échec de la connexion :', err)
+      return { success: false, error: err.message ?? 'Erreur inconnue' }
     }
   })
 
@@ -43,7 +43,7 @@ export function registerAuthHandlers(mainWindow: Electron.BrowserWindow) {
       }
       return { success: false }
     } catch (err: any) {
-      logger.error('Failed to refresh session:', err)
+      logger.error('Échec du rafraîchissement de la session :', err)
       return { success: false, error: err.message }
     }
   })
