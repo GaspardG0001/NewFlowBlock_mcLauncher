@@ -41,7 +41,7 @@ export async function bootstrap() {
   const progressBar = document.getElementById('update-progress-bar')
   const progressLabel = document.getElementById('update-progress-label')
   const progressPercent = document.getElementById('update-progress-percent')
-  const logoElement = document.querySelector('.logo') as HTMLImageElement | null
+  const logoElements = Array.from(document.querySelectorAll('.logo')) as HTMLImageElement[]
 
   const setIndeterminate = (active: boolean) => {
     if (!progressBar || !progressPercent) return
@@ -108,7 +108,9 @@ export async function bootstrap() {
     ])
 
     if (bgElement) bgElement.style.backgroundImage = `url('${bgUrl}')`
-    if (logoElement) logoElement.src = logoUrl
+    logoElements.forEach((logoElement) => {
+      logoElement.src = logoUrl
+    })
 
     if (session.success) {
       setUser(session.account)
@@ -119,7 +121,9 @@ export async function bootstrap() {
   } catch (err) {
     logger.error('Error while itializing launcher:', err)
     if (bgElement) bgElement.style.backgroundImage = `url('${DEFAULT_BACKGROUND}')`
-    if (logoElement) logoElement.src = DEFAULT_LOGO
+    logoElements.forEach((logoElement) => {
+      logoElement.src = DEFAULT_LOGO
+    })
     setView('login')
   } finally {
     await new Promise((resolve) => setTimeout(resolve, 400))

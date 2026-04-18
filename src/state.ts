@@ -33,7 +33,7 @@ function updateUserInterface() {
   const typeSettingsEl = document.getElementById('settings-user-type')
 
   if (nameEl) nameEl.innerText = currentAccount.name
-  if (avatarEl) avatarEl.src = `https://minotar.net/helm/${currentAccount.uuid ?? currentAccount.name}/100.png`
+  if (avatarEl) avatarEl.src = `https://minotar.net/cube/${currentAccount.uuid ?? currentAccount.name}/100.png`
   if (nameSettingsEl) nameSettingsEl.innerText = currentAccount.name
   if (uuidSettingsEl) uuidSettingsEl.innerText = `UUID: ${currentAccount.uuid}`
   if (typeSettingsEl) typeSettingsEl.innerHTML = getAccountIcon(currentAccount.meta.type)
@@ -56,6 +56,13 @@ export function setView(view: ViewName) {
   }
 
   target.classList.add('active')
+}
+
+export function setViewWithTab(view: ViewName, tab?: string) {
+  setView(view)
+  if (view === 'settings' && tab) {
+    setSettingsTab(tab)
+  }
 }
 
 export function setBlockingView(view: BlockingViewName) {
@@ -88,12 +95,27 @@ function getAccountIcon(type: 'msa' | 'yggdrasil' | 'azuriom' | 'crack') {
 }
 
 function resetSettingsTab() {
+  setSettingsTab('game')
+}
+
+function setSettingsTab(tab: string) {
   const tabButtons = document.querySelectorAll('.nav-btn')
   const tabContents = document.querySelectorAll('.tab-content')
   tabButtons.forEach((b) => b.classList.remove('active'))
   tabContents.forEach((content) => content.classList.remove('active'))
 
-  tabButtons[0].classList.add('active')
-  tabContents[0].classList.add('active')
+  const tabButton = document.querySelector(`.nav-btn[data-tab="${tab}"]`) as HTMLElement | null
+  const tabContent = document.getElementById(`tab-${tab}`)
+
+  if (tabButton && tabContent) {
+    tabButton.classList.add('active')
+    tabContent.classList.add('active')
+    return
+  }
+
+  if (tabButtons[0] && tabContents[0]) {
+    tabButtons[0].classList.add('active')
+    tabContents[0].classList.add('active')
+  }
 }
 

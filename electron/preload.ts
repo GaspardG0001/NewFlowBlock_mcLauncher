@@ -1,6 +1,7 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import type { IGameSettings, ISystemInfo } from './handlers/settings'
 import type { IAuthResponse } from './handlers/auth'
+import type { RssNewsArticle } from './handlers/news'
 import type {
   Account,
   BootstrapsEvents,
@@ -10,7 +11,6 @@ import type {
   IBackground,
   IBootstraps,
   IMaintenance,
-  INews,
   IServerStatus,
   JavaEvents,
   LauncherEvents,
@@ -85,7 +85,7 @@ contextBridge.exposeInMainWorld('api', {
     getStatus: (ip: string, port?: number): Promise<IServerStatus> => ipcRenderer.invoke('server:status', ip, port)
   },
   news: {
-    getNews: (): Promise<INews[]> => ipcRenderer.invoke('news:get_news'),
+    getNews: (): Promise<RssNewsArticle[]> => ipcRenderer.invoke('news:get_news'),
     getCategories: (): Promise<any[]> => ipcRenderer.invoke('news:get_categories')
   },
   background: {
