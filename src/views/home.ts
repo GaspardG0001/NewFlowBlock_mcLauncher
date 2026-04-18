@@ -1,34 +1,27 @@
 import { setViewWithTab, getUser } from '../state'
 import { game, news, server, settings, profiles } from '../ipc'
-import { marked } from 'marked'
-import DOMPurify from 'dompurify'
 import logger from 'electron-log/renderer'
-
-marked.use({
-  renderer: {
-    link(link) {
-      const href = link.href ?? '#'
-      const titleAttr = link.title ? ` title="${link.title}"` : ''
-      return `<a href="${href}" target="_blank" rel="noopener noreferrer"${titleAttr}>${link.text}</a>`
-    }
-  }
-})
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
   return date.toLocaleDateString('fr-FR', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-const parseNews = (rawContent: string) =>
-  DOMPurify.sanitize(marked.parse(rawContent) as string, {
-    ADD_ATTR: ['target']
-  })
+const escapeHtml = (value: string) =>
+  value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;')
 
-const backgroundColor = (color: string) => {
-  const r = parseInt(color.slice(1, 3), 16)
-  const g = parseInt(color.slice(3, 5), 16)
-  const b = parseInt(color.slice(5, 7), 16)
-  return `rgba(${r}, ${g}, ${b}, 0.1)`
+const isValidHttpUrl = (value: string) => {
+  try {
+    const parsed = new URL(value)
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:'
+  } catch {
+    return false
+  }
 }
 
 export function initHome() {
@@ -47,6 +40,7 @@ export function initHome() {
   const profileSelector = document.getElementById('profile-selector')
   const profileDropdown = document.getElementById('profile-dropdown')
   const currentProfileName = document.getElementById('current-profile-name')
+  const currentSelectedProfile = document.getElementById('current-selected-profile')
 
   let selectedProfile: any = null
   let allProfiles: any[] = []
@@ -86,6 +80,7 @@ export function initHome() {
   const selectProfile = (profile: any) => {
     selectedProfile = profile
     if (currentProfileName) currentProfileName.innerText = profile.name
+    if (currentSelectedProfile) currentSelectedProfile.innerText = profile.name
     renderDropdown()
     updateServerStatus()
   }
@@ -123,45 +118,47 @@ export function initHome() {
   const loadNews = async () => {
     if (!newsList) return
     newsList.innerHTML = '<div style="text-align:center; padding: 20px; color: #888;">Chargement des actualités...</div>'
-    const feed = await news.getNews()
+    try {
+      const rawFeed = await news.getNews()
+      const feed = Array.isArray(rawFeed)
+        ? rawFeed
+        : Array.isArray((rawFeed as any)?.items)
+          ? (rawFeed as any).items
+          : []
 
-    newsList.innerHTML = ''
+      newsList.innerHTML = ''
 
-    if (!feed || feed.length === 0) {
-      newsList.innerHTML = '<div style="text-align:center; color: #888;">Aucune actualité disponible.</div>'
-      return
-    }
+      if (feed.length === 0) {
+        newsList.innerHTML = '<div style="text-align:center; color: #888; padding: 20px;">Aucune actualité disponible.</div>'
+        return
+      }
 
-    feed.forEach((item: any) => {
-      let tagsHTML = ''
-      item.tags.forEach((tag: any) => {
-        tagsHTML += `<span class="tag" style="color: ${tag.color}; background-color: ${backgroundColor(tag.color)}">${tag.name}</span>`
-      })
-      const articleHTML = `
-        <article class="news-article">
-          <div class="article-meta">
-            <div class="author">
-              <img src="https://minotar.net/helm/${item.author.username}/24" alt="Auteur" />
-              <span>${item.author.username ?? 'Équipe admin'}</span>
+      feed.forEach((item: any) => {
+        const safeTitle = escapeHtml(item?.title ?? 'Article')
+        const safeDescription = escapeHtml(item?.description ?? '')
+        const safeDate = item?.publishedAt ? formatDate(item.publishedAt) : ''
+        const safeLink = isValidHttpUrl(item?.link ?? '') ? item.link : '#'
+        const safeBackground = typeof item?.image === 'string' && item.image.length > 0
+          ? `background-image: linear-gradient(180deg, rgba(0,0,0,0.20) 0%, rgba(0,0,0,0.82) 70%), url('${item.image.replaceAll("'", '%27')}');`
+          : 'background: linear-gradient(155deg, rgba(18,23,34,0.9) 0%, rgba(11,14,20,0.95) 100%);'
+
+        const articleHTML = `
+          <a class="news-article news-article-card" href="${safeLink}" target="_blank" rel="noopener noreferrer" style="${safeBackground}">
+            <div class="article-overlay"></div>
+            <div class="article-content-card">
+              <span class="date">${safeDate}</span>
+              <h3>${safeTitle}</h3>
+              <p>${safeDescription}</p>
             </div>
-            <span class="separator">•</span>
-            <span class="date">${formatDate(item.createdAt)}</span>
-            <span class="separator">•</span>
-            <div class="tags-container">${tagsHTML}</div>
-          </div>
+          </a>
+        `
 
-          <h3>${item.title}</h3>
-          
-          ${item.image ? `<img src="${item.image}" alt="Image de l'actualité" onerror="this.style.display='none'"/>` : ''}
-
-          <div class="article-content">
-            ${parseNews(item.content)}
-          </div>
-        </article>
-      `
-
-      newsList.insertAdjacentHTML('beforeend', articleHTML)
-    })
+        newsList.insertAdjacentHTML('beforeend', articleHTML)
+      })
+    } catch (error) {
+      logger.error('Unable to load RSS news:', error)
+      newsList.innerHTML = '<div style="text-align:center; color: #888; padding: 20px;">Impossible de charger les actualités.</div>'
+    }
   }
 
   loadProfiles()
