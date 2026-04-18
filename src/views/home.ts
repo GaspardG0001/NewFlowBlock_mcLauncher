@@ -133,7 +133,7 @@ export function initHome() {
         return
       }
 
-      feed.forEach((item: any) => {
+      feed.slice(0, 2).forEach((item: any) => {
         const safeTitle = escapeHtml(item?.title ?? 'Article')
         const safeDescription = escapeHtml(item?.description ?? '')
         const safeDate = item?.publishedAt ? formatDate(item.publishedAt) : ''

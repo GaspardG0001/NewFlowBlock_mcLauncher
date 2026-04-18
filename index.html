@@ -138,44 +138,53 @@
         </aside>
 
         <main class="home-content">
-          <section class="server-details">
-            <div class="server-status-block">
-              <div class="server-status">
-                <div class="status-indicator" id="server-status-indicator">
-                  <div class="status-dot pinging" id="server-status-dot"></div>
+          <div class="home-panels">
+            <section class="server-details">
+              <div class="server-status-block">
+                <div class="server-status">
+                  <div class="status-indicator" id="server-status-indicator">
+                    <div class="status-dot pinging" id="server-status-dot"></div>
+                    <span id="server-status-text">Ping en cours...</span>
+                  </div>
+                  <div class="player-count" id="player-count"></div>
                 </div>
-                <div class="player-count" id="player-count"></div>
+                <a href="https://status.mcflowblock.com" target="_blank" rel="noopener noreferrer" class="status-link">Voir le statut du serveur <i class="bi bi-box-arrow-up-right"></i></a>
               </div>
-              <a href="https://status.mcflowblock.com" target="_blank" rel="noopener noreferrer" class="status-link">Voir le statut du serveur <i class="bi bi-box-arrow-up-right"></i></a>
-            </div>
-        
-            <div class="server-profile">
-              <h2 class="server-name" id="current-profile-name">FlowBlock_mc</h2>
 
-              <div class="profile-selector-container" id="profile-selector">
-              <div class="selected-profile">
-                <span id="current-profile-name">Sélectionner un profil</span>
-                <i class="bi bi-chevron-down"></i>
-              </div>
-              <div class="profile-dropdown" id="profile-dropdown"></div>
-            </div>
+              <div class="server-profile">
+                <h2 class="server-name" id="current-profile-name">FlowBlock_mc</h2>
 
-              <div class="launch-area">
-              <button id="btn-play">JOUER</button>
-
-              <div class="progress-container hidden" id="launch-progress-container">
-                <div class="progress-info">
-                  <span id="launch-progress-label">Téléchargement...</span>
-                  <span id="launch-progress-percent">0%</span>
+                <div class="profile-selector-container" id="profile-selector">
+                <div class="selected-profile">
+                  <span id="current-selected-profile">Sélectionner un profil</span>
+                  <i class="bi bi-chevron-down"></i>
                 </div>
-                <div class="progress-bar-bg">
-                  <div class="progress-bar-fill" id="launch-progress-bar"></div>
+                <div class="profile-dropdown" id="profile-dropdown"></div>
+              </div>
+
+                <div class="launch-area">
+                <button id="btn-play">JOUER</button>
+
+                <div class="progress-container hidden" id="launch-progress-container">
+                  <div class="progress-info">
+                    <span id="launch-progress-label">Téléchargement...</span>
+                    <span id="launch-progress-percent">0%</span>
+                  </div>
+                  <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="launch-progress-bar"></div>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            </div>
-          </section>
+              </div>
+            </section>
+
+            <section class="home-news">
+              <div class="news-list" id="news-list">
+                <div style="text-align:center; color: #888; padding: 20px;">Chargement des actualités...</div>
+              </div>
+            </section>
+          </div>
         </main>
       </div>
 
