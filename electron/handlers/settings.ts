@@ -63,7 +63,7 @@ export function registerSettingsHandlers() {
       fs.writeFileSync(settingsPath, JSON.stringify(newSettings, null, 2))
       return true
     } catch (err) {
-      logger.error('Erreur lors de l'écriture des paramètres :', err)
+      logger.error('Erreur lors de l\'écriture des paramètres :', err)
       return false
     }
   })
