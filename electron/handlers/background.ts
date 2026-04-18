@@ -11,7 +11,7 @@ export function registerBackgroundHandlers() {
       const currentBackground = await background.getBackground()
       return currentBackground
     } catch (err) {
-      logger.error('Failed to fetch background:', err)
+      logger.error('Échec de la récupération du fond d\'écran :', err)
       return null
     }
   })

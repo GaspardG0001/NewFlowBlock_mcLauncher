@@ -4,6 +4,8 @@ import logger from 'electron-log/renderer'
 // import _mockSession from './_mock-msa'
 
 const DEFAULT_BACKGROUND = '/src/static/images/bg.png'
+const DEFAULT_LOGO = '/src/static/images/logo.png'
+const REMOTE_LOGO = 'https://mcflowblock.com/eml-logo'
 const dateFormatOptions: Intl.DateTimeFormatOptions = {
   day: '2-digit',
   month: '2-digit',
@@ -21,8 +23,17 @@ function preloadImage(url: string): Promise<void> {
   })
 }
 
+function resolveImageWithFallback(primaryUrl: string, fallbackUrl: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image()
+    img.src = primaryUrl
+    img.onload = () => resolve(primaryUrl)
+    img.onerror = () => resolve(fallbackUrl)
+  })
+}
+
 export async function bootstrap() {
-  logger.log('Initializing Launcher...')
+  logger.log('Initialisation du launcher...')
 
   const bgElement = document.querySelector('.app-background') as HTMLElement
   const maintenanceDates = document.getElementById('maintenance-dates')!
@@ -30,6 +41,7 @@ export async function bootstrap() {
   const progressBar = document.getElementById('update-progress-bar')
   const progressLabel = document.getElementById('update-progress-label')
   const progressPercent = document.getElementById('update-progress-percent')
+  const logoElement = document.querySelector('.logo') as HTMLImageElement | null
 
   const setIndeterminate = (active: boolean) => {
     if (!progressBar || !progressPercent) return
@@ -47,23 +59,24 @@ export async function bootstrap() {
   const bg = await background.get()
   const mn = await maintenance.get()
   const bgUrl = bg?.file?.url ?? DEFAULT_BACKGROUND
+  const logoUrl = await resolveImageWithFallback(REMOTE_LOGO, DEFAULT_LOGO)
 
   if (up.updateAvailable) {
     setIndeterminate(false)
     progressBar!.style.width = '0%'
-    progressLabel!.innerText = 'Preparing update...'
+    progressLabel!.innerText = 'Préparation de la mise à jour...'
     progressPercent!.innerText = '0%'
     setBlockingView('update')
     await new Promise((r) => setTimeout(r, 500))
     bootstraps.downloadProgress((value) => {
-      progressLabel!.innerText = `Downloading update...`
+      progressLabel!.innerText = `Téléchargement de la mise à jour...`
       const percent = ((value.downloaded.size / value.total.amount) * 100).toFixed(2)
       progressPercent!.innerText = `${percent}%`
       progressBar!.style.width = `${percent}%`
     })
     bootstraps.downloadEnd(async () => {
       setIndeterminate(true)
-      progressLabel!.innerText = `Installing...`
+      progressLabel!.innerText = `Installation...`
       await bootstraps.install()
     })
     bootstraps.error((err) => {
@@ -81,19 +94,21 @@ export async function bootstrap() {
   if (mn) {
     const start = new Date(mn.startTime as Date)
     const end = new Date(mn.endTime as Date)
-    maintenanceDates.innerText = `From ${start.toLocaleString([], dateFormatOptions)} to ${end.toLocaleString([], dateFormatOptions)}`
-    maintenanceReason.innerText = mn.message ?? 'Please come back later.'
+    maintenanceDates.innerText = `Du ${start.toLocaleString('fr-FR', dateFormatOptions)} au ${end.toLocaleString('fr-FR', dateFormatOptions)}`
+    maintenanceReason.innerText = mn.message ?? 'Veuillez revenir plus tard.'
     setBlockingView('maintenance')
     return
   }
   try {
-    const [_, session] = await Promise.all([
+    const [_, __, session] = await Promise.all([
       preloadImage(bgUrl),
+      preloadImage(logoUrl),
       auth.refresh()
       // Promise.resolve(_mockSession)
     ])
 
     if (bgElement) bgElement.style.backgroundImage = `url('${bgUrl}')`
+    if (logoElement) logoElement.src = logoUrl
 
     if (session.success) {
       setUser(session.account)
@@ -104,6 +119,7 @@ export async function bootstrap() {
   } catch (err) {
     logger.error('Error while itializing launcher:', err)
     if (bgElement) bgElement.style.backgroundImage = `url('${DEFAULT_BACKGROUND}')`
+    if (logoElement) logoElement.src = DEFAULT_LOGO
     setView('login')
   } finally {
     await new Promise((resolve) => setTimeout(resolve, 400))
