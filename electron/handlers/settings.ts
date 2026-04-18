@@ -18,8 +18,8 @@ export interface ISystemInfo {
 export interface IGameSettings {
   java: string
   memory: {
-    min: string
-    max: string
+    min: number
+    max: number
   }
   resolution: {
     width: number
@@ -32,8 +32,8 @@ export interface IGameSettings {
 export const DEFAULT_SETTINGS: IGameSettings = {
   java: 'bundled',
   memory: {
-    min: '1G',
-    max: '4G'
+    min: 1,
+    max: 4
   },
   resolution: {
     width: 1280,
