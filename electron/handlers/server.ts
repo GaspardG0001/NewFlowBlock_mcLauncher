@@ -9,7 +9,7 @@ export function registerServerHandlers() {
       const status = await server.getStatus()
       return status
     } catch (err) {
-      logger.error('Échec de la récupération de l'état du serveur :', err)
+      logger.error('Échec de la récupération de l\'état du serveur :', err)
       return null
     }
   })
