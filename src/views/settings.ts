@@ -4,8 +4,8 @@ import { Dialog } from './dialog'
 import type { IGameSettings } from '../../electron/handlers/settings'
 
 const resolutionList = [
-  { label: 'Auto (default)', value: '854x480', width: 854, height: 480 },
-  { label: 'Fullscreen', value: 'fullscreen', width: 854, height: 480 },
+  { label: 'Automatique (par défaut)', value: '854x480', width: 854, height: 480 },
+  { label: 'Plein écran', value: 'fullscreen', width: 854, height: 480 },
   { label: '2560x1440 (1440p)', value: '2560x1440', width: 2560, height: 1440 },
   { label: '1920x1080 (1080p)', value: '1920x1080', width: 1920, height: 1080 },
   { label: '1600x900', value: '1600x900', width: 1600, height: 900 },
@@ -27,7 +27,7 @@ export async function initSettings() {
   initFormValues(sysInfo.resolution)
 
   const versionElem = document.getElementById('version')
-  if (versionElem) versionElem.innerText = `EML Template v${sysInfo.version}`
+  if (versionElem) versionElem.innerText = `Launcher EML v${sysInfo.version}`
 }
 
 function initUIListeners() {
@@ -43,9 +43,9 @@ function initUIListeners() {
 
   logoutBtn?.addEventListener('click', async () => {
     if (
-      await Dialog.show('Log out?', [
-        { text: 'Cancel', type: 'cancel' },
-        { text: 'Logout', type: 'danger' }
+      await Dialog.show('Se déconnecter ?', [
+        { text: 'Annuler', type: 'cancel' },
+        { text: 'Se déconnecter', type: 'danger' }
       ])
     ) {
       await auth.logout()
@@ -92,8 +92,8 @@ function initDualSlider(maxRamSystem: number) {
       }
     }
 
-    if (minLabel) minLabel.innerText = `${minVal} GB`
-    if (maxLabel) maxLabel.innerText = `${maxVal} GB`
+    if (minLabel) minLabel.innerText = `${minVal} Go`
+    if (maxLabel) maxLabel.innerText = `${maxVal} Go`
 
     const range = maxRamSystem - parseFloat(minInput.min)
     const minPercent = ((minVal - parseFloat(minInput.min)) / range) * 100

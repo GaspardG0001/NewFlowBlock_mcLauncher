@@ -24,7 +24,7 @@ export function logout() {
 function updateUserInterface() {
   if (!currentAccount) return
 
-  logger.log('Updating UI for user:', currentAccount.name)
+  logger.log("Mise à jour de l'interface pour l'utilisateur :", currentAccount.name)
 
   const nameEl = document.getElementById('user-name')
   const avatarEl = document.getElementById('user-avatar') as HTMLImageElement
@@ -75,15 +75,15 @@ export function closeOverlay(view: ViewName) {
 function getAccountIcon(type: 'msa' | 'yggdrasil' | 'azuriom' | 'crack') {
   switch (type) {
     case 'msa':
-      return '<i class="bi bi-microsoft"></i>Microsoft account'
+      return '<i class="bi bi-microsoft"></i>Compte Microsoft'
     case 'yggdrasil':
-      return '<i class="bi bi-person-fill"></i>Yggdrasil account'
+      return '<i class="bi bi-person-fill"></i>Compte Yggdrasil'
     case 'azuriom':
-      return '<i class="bi bi-globe"></i>Azuriom account'
+      return '<i class="bi bi-globe"></i>Compte Azuriom'
     case 'crack':
-      return '<i class="bi bi-person-slash"></i>Cracked account'
+      return '<i class="bi bi-person-slash"></i>Compte cracké'
     default:
-      return 'Unknown account type'
+      return 'Type de compte inconnu'
   }
 }
 

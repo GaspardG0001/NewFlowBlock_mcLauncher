@@ -53,7 +53,7 @@ export function registerSettingsHandlers() {
       const data = fs.readFileSync(settingsPath, 'utf-8')
       return { ...DEFAULT_SETTINGS, ...JSON.parse(data) }
     } catch (err) {
-      logger.error('Error reading settings:', err)
+      logger.error('Erreur lors de la lecture des paramètres :', err)
       return DEFAULT_SETTINGS
     }
   })
@@ -63,7 +63,7 @@ export function registerSettingsHandlers() {
       fs.writeFileSync(settingsPath, JSON.stringify(newSettings, null, 2))
       return true
     } catch (err) {
-      logger.error('Error writing settings:', err)
+      logger.error('Erreur lors de l'écriture des paramètres :', err)
       return false
     }
   })
@@ -85,7 +85,7 @@ export function registerSettingsHandlers() {
   ipcMain.handle('settings:pick_java', async () => {
     const result = await dialog.showOpenDialog({
       properties: ['openFile'],
-      filters: [{ name: 'Java Executable', extensions: ['exe', 'bin', ''] }]
+      filters: [{ name: 'Exécutable Java', extensions: ['exe', 'bin', ''] }]
     })
     return result.filePaths[0] ?? null
   })

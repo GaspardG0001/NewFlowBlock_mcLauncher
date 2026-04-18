@@ -33,7 +33,7 @@ function resolveImageWithFallback(primaryUrl: string, fallbackUrl: string): Prom
 }
 
 export async function bootstrap() {
-  logger.log('Initializing Launcher...')
+  logger.log('Initialisation du launcher...')
 
   const bgElement = document.querySelector('.app-background') as HTMLElement
   const maintenanceDates = document.getElementById('maintenance-dates')!
@@ -64,19 +64,19 @@ export async function bootstrap() {
   if (up.updateAvailable) {
     setIndeterminate(false)
     progressBar!.style.width = '0%'
-    progressLabel!.innerText = 'Preparing update...'
+    progressLabel!.innerText = 'Préparation de la mise à jour...'
     progressPercent!.innerText = '0%'
     setBlockingView('update')
     await new Promise((r) => setTimeout(r, 500))
     bootstraps.downloadProgress((value) => {
-      progressLabel!.innerText = `Downloading update...`
+      progressLabel!.innerText = `Téléchargement de la mise à jour...`
       const percent = ((value.downloaded.size / value.total.amount) * 100).toFixed(2)
       progressPercent!.innerText = `${percent}%`
       progressBar!.style.width = `${percent}%`
     })
     bootstraps.downloadEnd(async () => {
       setIndeterminate(true)
-      progressLabel!.innerText = `Installing...`
+      progressLabel!.innerText = `Installation...`
       await bootstraps.install()
     })
     bootstraps.error((err) => {
@@ -94,8 +94,8 @@ export async function bootstrap() {
   if (mn) {
     const start = new Date(mn.startTime as Date)
     const end = new Date(mn.endTime as Date)
-    maintenanceDates.innerText = `From ${start.toLocaleString([], dateFormatOptions)} to ${end.toLocaleString([], dateFormatOptions)}`
-    maintenanceReason.innerText = mn.message ?? 'Please come back later.'
+    maintenanceDates.innerText = `Du ${start.toLocaleString('fr-FR', dateFormatOptions)} au ${end.toLocaleString('fr-FR', dateFormatOptions)}`
+    maintenanceReason.innerText = mn.message ?? 'Veuillez revenir plus tard.'
     setBlockingView('maintenance')
     return
   }

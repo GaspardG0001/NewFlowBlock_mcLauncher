@@ -11,7 +11,7 @@ import { registerBootstrapHandlers } from './handlers/bootstraps'
 import logger from 'electron-log/main'
 import { registerProfilesHandlers } from './handlers/profiles'
 
-const APP_TITLE = 'EML Template'
+const APP_TITLE = 'Launcher EML'
 const BG_COLOR = '#121212'
 
 let mainWindow: BrowserWindow | null = null
@@ -65,9 +65,9 @@ function configureAppMenu() {
   app.setAboutPanelOptions({
     applicationName: APP_TITLE,
     applicationVersion: app.getVersion(),
-    version: 'Build 2026.1',
-    copyright: 'Copyright © 2026 EML',
-    credits: 'Developed with EML Lib & Electron',
+    version: 'Version de build 2026.1',
+    copyright: "Droits d'auteur © 2026 EML",
+    credits: 'Développé avec EML Lib et Electron',
     iconPath: path.join(__dirname, '../build/icon.png')
   })
 
@@ -92,12 +92,12 @@ function configureAppMenu() {
       : []),
 
     {
-      label: 'File',
+      label: 'Fichier',
       submenu: [{ role: 'close' }]
     },
 
     {
-      label: 'View',
+      label: 'Affichage',
       submenu: [{ role: 'reload' }, { role: 'forceReload' }, { role: 'toggleDevTools' }, { type: 'separator' }, { role: 'togglefullscreen' }]
     }
   ]

@@ -11,7 +11,7 @@ export function registerMaintenanceHandlers() {
       const status = await maintenance.getMaintenance()
       return status?.startTime && new Date(status.startTime) <= new Date() ? status : null
     } catch (err) {
-      logger.error('Failed to fetch maintenance:', err)
+      logger.error('Échec de la récupération de la maintenance :', err)
       return null
     }
   })
