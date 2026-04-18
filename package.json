@@ -1,23 +1,23 @@
 {
-  "name": "eml-template",
-  "productName": "EML Template",
+  "name": "mcflowblock-launcher",
+  "productName": "FlowBlock_mc Launcher",
   "author": "GoldFrite",
-  "description": "Template launcher with EML Lib",
+  "description": "Launcher for FlowBlock_mc, built with EML Lib",
   "private": true,
-  "version": "1.1.1",
+  "version": "1.0.0",
   "license": "MIT",
   "main": "dist-electron/main.js",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build && electron-builder",
     "release:win": "npm run build && electron-builder --win",
     "release:mac": "npm run build && electron-builder --mac",
     "release:lin": "npm run build && electron-builder --linux"
   },
   "build": {
-    "appId": "com.eml.template",
-    "productName": "EML Template",
-    "copyright": "Copyright © 2026 EML",
+    "appId": "com.mcflowblock.launcher",
+    "productName": "FlowBlock_mc Launcher",
+    "copyright": "Copyright © 2026 FlowBlock_mc",
     "directories": {
       "output": "release",
       "buildResources": "build"
@@ -40,12 +40,12 @@
     ],
     "publish": {
       "provider": "generic",
-      "url": "https://emlproject.pages.dev/"
+      "url": "https://eml.mcflowblock.com/"
     },
     "win": {
       "target": "nsis",
       "icon": "build/icon.ico",
-      "legalTrademarks": "EML Project"
+      "legalTrademarks": "FlowBlock_mc"
     },
     "nsis": {
       "oneClick": false,
@@ -53,10 +53,10 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "EML Template",
+      "shortcutName": "FlowBlock_mc Launcher",
       "deleteAppDataOnUninstall": true,
-      "artifactName": "${productName}-Setup-${version}.${ext}",
-      "uninstallDisplayName": "EML Template"
+      "artifactName": "${productName}-Setup.${ext}",
+      "uninstallDisplayName": "FlowBlock_mc Launcher"
     },
     "mac": {
       "target": [
@@ -102,7 +102,7 @@
       ],
       "icon": "build/icon.png",
       "category": "Game",
-      "description": "Template launcher with EML Lib",
+      "description": "Launcher for FlowBlock_mc",
       "artifactName": "${productName}-${version}.${ext}"
     }
   },

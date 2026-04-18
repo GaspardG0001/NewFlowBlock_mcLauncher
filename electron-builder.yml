@@ -1,0 +1,86 @@
+appId: com.mcflowblock.launcher
+productName: "FlowBlock_mc Launcher"
+copyright: "Copyright © 2026 FlowBlock_mc"
+
+# The output folder where executables will be created
+directories:
+  output: dist
+  buildResources: build
+
+# Which files to include in the final app
+files:
+  - "dist/**/*"
+  - "electron/**/*"
+  - "dist-electron/**/*"
+  - "package.json"
+  - "!**/node_modules/*/{CHANGELOG.md,README.md,README,readme.md,readme}",
+  - "!**/node_modules/*/{test,__tests__,tests,powered-test,example,examples}",
+  - "!**/node_modules/*.d.ts",
+  - "!**/node_modules/.bin",
+  - "!**/*.{iml,o,hprof,orig,pyc,pyo,rbc,swp,csproj,sln,xproj}",
+  - "!.editorconfig",
+  - "!**/._*",
+  - "!**/{.DS_Store,.git,.hg,.svn,CVS,RCS,SCCS,.gitignore,.gitattributes}",
+  - "!**/{__pycache__,thumbs.db,.flowconfig,.idea,.vs,.nyc_output}",
+  - "!**/{appveyor.yml,.travis.yml,circle.yml}",
+  - "!**/{npm-debug.log,yarn.lock,.yarn-integrity,.yarn-metadata.json}"
+
+publish:
+  provider: generic
+  url: "https://mcflowblock.com/launcher/"
+
+# WINDOWS CONFIGURATION
+win:
+  target: nsis
+  icon: build/icon.ico
+  legalTrademarks: "FlowBlock_mc"
+
+# The Installer configuration (Setup.exe)
+nsis:
+  oneClick: false # Allow user to choose install path
+  perMachine: false # Install for current user (no admin rights needed)
+  allowToChangeInstallationDirectory: true
+  shortcutName: "FlowBlock_mc Launcher"
+  uninstallDisplayName: "FlowBlock_mc Launcher"
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  deleteAppDataOnUninstall: true
+  artefactName: "${productName}-Setup.${ext}"
+
+# MACOS CONFIGURATION
+mac:
+  target: 
+    - dmg
+    - zip
+  icon: build/icon.icns
+  category: public.app-category.games
+  darkModeSupport: true
+  hardenedRuntime: true # Required for notarization
+  gatekeeperAssess: false
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+  artefactName: "${productName}.${ext}"
+
+# The DMG installer window appearance
+dmg:
+  background: build/dmg-background.png
+  icon: build/dmg-icon.icns
+  iconSize: 100
+  title: "Install FlowBlock_mc Launcher"
+  contents:
+    - x: 130
+      y: 220
+    - x: 410
+      y: 220
+      type: link
+      path: /Applications
+
+# LINUX CONFIGURATION
+linux:
+  target: 
+    - AppImage
+    - deb
+    - rpm
+  icon: build/icon.png
+  category: Game
+  artefactName: "${productName}.${ext}"
