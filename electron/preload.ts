@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 import type { IGameSettings, ISystemInfo } from './handlers/settings'
 import type { IAuthResponse } from './handlers/auth'
 import type { RssNewsArticle } from './handlers/news'
+import type { UserRole } from './handlers/permissions'
 import type {
   Account,
   BootstrapsEvents,
@@ -27,6 +28,9 @@ contextBridge.exposeInMainWorld('api', {
   },
   profiles: {
     get: (): Promise<any[]> => ipcRenderer.invoke('profiles:get')
+  },
+  permissions: {
+    getRole: (username?: string): Promise<UserRole> => ipcRenderer.invoke('permissions:get_role', username)
   },
 
   game: {
