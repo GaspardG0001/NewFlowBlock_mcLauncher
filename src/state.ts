@@ -15,6 +15,7 @@ export function setUser(account: Account) {
   currentAccount = account
   updateUserInterface()
   void updateUserRole(account.name)
+  window.dispatchEvent(new Event('app:user-changed'))
 }
 
 export function logout() {
@@ -23,6 +24,7 @@ export function logout() {
   const roleEl = document.getElementById('settings-user-role')
   if (nameEl) nameEl.innerText = ''
   if (roleEl) roleEl.innerText = 'Membre'
+  window.dispatchEvent(new Event('app:user-changed'))
 }
 
 function updateUserInterface() {
