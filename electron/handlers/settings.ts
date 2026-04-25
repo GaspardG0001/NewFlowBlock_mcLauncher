@@ -32,8 +32,8 @@ export interface IGameSettings {
 export const DEFAULT_SETTINGS: IGameSettings = {
   java: 'bundled',
   memory: {
-    min: 1,
-    max: 4
+    min: 4,
+    max: 6
   },
   resolution: {
     width: 1280,

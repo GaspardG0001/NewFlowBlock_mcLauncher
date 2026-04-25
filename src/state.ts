@@ -1,5 +1,6 @@
 import type { Account } from 'eml-lib'
 import logger from 'electron-log/renderer'
+import { permissions } from './ipc'
 
 export type ViewName = 'loading' | 'login' | 'home' | 'settings'
 export type BlockingViewName = 'maintenance' | 'update'
@@ -13,12 +14,17 @@ export function getUser() {
 export function setUser(account: Account) {
   currentAccount = account
   updateUserInterface()
+  void updateUserRole(account.name)
+  window.dispatchEvent(new Event('app:user-changed'))
 }
 
 export function logout() {
   currentAccount = null
   const nameEl = document.getElementById('user-name')
+  const roleEl = document.getElementById('settings-user-role')
   if (nameEl) nameEl.innerText = ''
+  if (roleEl) roleEl.innerText = 'Membre'
+  window.dispatchEvent(new Event('app:user-changed'))
 }
 
 function updateUserInterface() {
@@ -37,6 +43,19 @@ function updateUserInterface() {
   if (nameSettingsEl) nameSettingsEl.innerText = currentAccount.name
   if (uuidSettingsEl) uuidSettingsEl.innerText = `UUID: ${currentAccount.uuid}`
   if (typeSettingsEl) typeSettingsEl.innerHTML = getAccountIcon(currentAccount.meta.type)
+}
+
+async function updateUserRole(username?: string) {
+  const roleEl = document.getElementById('settings-user-role')
+  if (!roleEl) return
+
+  try {
+    const role = await permissions.getRole(username)
+    roleEl.innerText = role
+  } catch (err) {
+    logger.error('Impossible de recuperer le role utilisateur :', err)
+    roleEl.innerText = 'Membre'
+  }
 }
 
 export function setView(view: ViewName) {

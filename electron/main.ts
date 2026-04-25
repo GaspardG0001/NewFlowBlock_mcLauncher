@@ -10,6 +10,7 @@ import { registerMaintenanceHandlers } from './handlers/maintenance'
 import { registerBootstrapHandlers } from './handlers/bootstraps'
 import logger from 'electron-log/main'
 import { registerProfilesHandlers } from './handlers/profiles'
+import { registerPermissionsHandlers } from './handlers/permissions'
 
 const APP_TITLE = 'Launcher EML'
 const BG_COLOR = '#121212'
@@ -121,6 +122,7 @@ app.whenReady().then(() => {
     registerBootstrapHandlers(mainWindow)
     registerLauncherHandlers(mainWindow)
     registerSettingsHandlers()
+    registerPermissionsHandlers()
   }
 })
 

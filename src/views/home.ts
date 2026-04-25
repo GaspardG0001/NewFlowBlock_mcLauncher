@@ -1,5 +1,6 @@
 import { setViewWithTab, getUser } from '../state'
-import { game, news, server, settings, profiles } from '../ipc'
+import { game, news, server, settings, profiles, permissions } from '../ipc'
+import { Dialog } from './dialog'
 import logger from 'electron-log/renderer'
 
 const formatDate = (dateString: string) => {
@@ -44,20 +45,61 @@ export function initHome() {
 
   let selectedProfile: any = null
   let allProfiles: any[] = []
+  let currentRole: 'Membre' | 'Développeur' = 'Membre'
   let totalToDownload = 0
   let totalDownloadedByType: { type: string; size: number }[] = []
 
-  const loadProfiles = async () => {
-    allProfiles = await profiles.get()
-    if (allProfiles.length > 0) {
-      selectProfile(allProfiles[0])
-      renderDropdown()
+  const isDeveloperProfile = (profile: any) => typeof profile?.name === 'string' && profile.name.startsWith('[DEV] ')
+
+  const canAccessDeveloperProfiles = () => currentRole === 'Développeur'
+
+  const getVisibleProfiles = () =>
+    canAccessDeveloperProfiles() ? allProfiles : allProfiles.filter((profile) => !isDeveloperProfile(profile))
+
+  const setNoProfileAvailableState = () => {
+    selectedProfile = null
+    if (currentProfileName) currentProfileName.innerText = 'Aucun profil disponible'
+    if (currentSelectedProfile) currentSelectedProfile.innerText = 'Aucun profil disponible'
+    if (profileDropdown) {
+      profileDropdown.innerHTML = '<div class="profile-option disabled">Aucun profil disponible</div>'
     }
+    if (playBtn) playBtn.setAttribute('disabled', 'true')
+  }
+
+  const setPlayAvailability = () => {
+    if (!playBtn) return
+    const hasPlayableProfile = Boolean(selectedProfile)
+    playBtn.toggleAttribute('disabled', !hasPlayableProfile)
+  }
+
+  const loadProfiles = async () => {
+    const user = getUser()
+    if (!user) return
+
+    currentRole = await permissions.getRole(user.name)
+    allProfiles = await profiles.get()
+
+    const visibleProfiles = getVisibleProfiles()
+    if (visibleProfiles.length === 0) {
+      setNoProfileAvailableState()
+      return
+    }
+
+    const preferredProfile = visibleProfiles.find((profile) => profile.isDefault) ?? visibleProfiles[0]
+    selectProfile(preferredProfile)
+    renderDropdown()
   }
 
   const renderDropdown = () => {
     if (!profileDropdown) return
-    profileDropdown.innerHTML = allProfiles
+    const visibleProfiles = getVisibleProfiles()
+
+    if (visibleProfiles.length === 0) {
+      setNoProfileAvailableState()
+      return
+    }
+
+    profileDropdown.innerHTML = visibleProfiles
       .map(
         (p) => `
       <div class="profile-option ${selectedProfile?.id === p.id ? 'active' : ''}" data-id="${p.id}">
@@ -70,19 +112,26 @@ export function initHome() {
     profileDropdown.querySelectorAll('.profile-option').forEach((opt) => {
       opt.addEventListener('click', (e) => {
         const id = (e.target as HTMLElement).dataset.id
-        const profile = allProfiles.find((p) => p.id === id)
+        const profile = visibleProfiles.find((p) => p.id === id)
         if (profile) selectProfile(profile)
         profileSelector?.classList.remove('open')
       })
     })
+
+    setPlayAvailability()
   }
 
   const selectProfile = (profile: any) => {
+    if (isDeveloperProfile(profile) && !canAccessDeveloperProfiles()) {
+      return
+    }
+
     selectedProfile = profile
     if (currentProfileName) currentProfileName.innerText = profile.name
     if (currentSelectedProfile) currentSelectedProfile.innerText = profile.name
     renderDropdown()
     updateServerStatus()
+    setPlayAvailability()
   }
 
   const updateServerStatus = async () => {
@@ -161,7 +210,14 @@ export function initHome() {
     }
   }
 
-  loadProfiles()
+  window.addEventListener('app:user-changed', () => {
+    void loadProfiles()
+  })
+
+  if (getUser()) {
+    void loadProfiles()
+  }
+
   updateServerStatus()
   loadNews()
 
@@ -186,6 +242,16 @@ export function initHome() {
   })
 
   playBtn?.addEventListener('click', async () => {
+    if (!selectedProfile) {
+      await Dialog.show('Aucun profil n\'est disponible pour votre compte.', [{ text: 'Fermer', type: 'ok' }])
+      return
+    }
+
+    if (isDeveloperProfile(selectedProfile) && !canAccessDeveloperProfiles()) {
+      await Dialog.show('Ce profil est réservé aux développeurs.', [{ text: 'Fermer', type: 'ok' }])
+      return
+    }
+
     setIndeterminate(true)
     if (playBtn) playBtn.style.display = 'none'
     if (progressContainer) progressContainer.classList.remove('hidden')

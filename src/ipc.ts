@@ -1,6 +1,7 @@
 import type { IGameSettings, ISystemInfo } from '../electron/handlers/settings'
 import type { IAuthResponse } from '../electron/handlers/auth'
 import type { RssNewsArticle } from '../electron/handlers/news'
+import type { UserRole } from '../electron/handlers/permissions'
 import type {
   Account,
   BootstrapsEvents,
@@ -28,6 +29,9 @@ declare global {
       }
       profiles: {
         get: () => Promise<IProfile[]>
+      }
+      permissions: {
+        getRole: (username?: string) => Promise<UserRole>
       }
       server: {
         getStatus: (ip: string, port?: number) => Promise<IServerStatus | null>
@@ -108,6 +112,10 @@ export const auth = {
 
 export const profiles = {
   get: async () => await window.api.profiles.get()
+}
+
+export const permissions = {
+  getRole: async (username?: string) => await window.api.permissions.getRole(username)
 }
 
 export const server = {
