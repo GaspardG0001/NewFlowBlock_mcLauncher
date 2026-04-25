@@ -4,7 +4,7 @@
   "author": "GoldFrite",
   "description": "Launcher for FlowBlock_mc, built with EML Lib",
   "private": true,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "license": "MIT",
   "main": "dist-electron/main.js",
   "scripts": {
