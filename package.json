@@ -2,7 +2,7 @@
   "name": "mcflowblock-launcher",
   "productName": "FlowBlock_mc Launcher",
   "author": "GoldFrite",
-  "description": "Launcher for FlowBlock_mc, built with EML Lib",
+  "description": "Launcher pour jouer à FlowBlock_mc",
   "private": true,
   "version": "1.1.0",
   "license": "MIT",
@@ -102,7 +102,7 @@
       ],
       "icon": "build/icon.png",
       "category": "Game",
-      "description": "Launcher for FlowBlock_mc",
+      "description": "Launcher pour jouer à FlowBlock_mc",
       "artifactName": "${productName}-${version}.${ext}"
     }
   },

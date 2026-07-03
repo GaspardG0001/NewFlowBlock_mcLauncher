@@ -1,0 +1,141 @@
+name: Build launcher on main
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: main-release
+  cancel-in-progress: false
+
+jobs:
+  prepare-version:
+    name: Prepare release version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.compute.outputs.version }}
+      tag: ${{ steps.compute.outputs.tag }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Compute next version from latest tag
+        id: compute
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const { execSync } = require('child_process');
+
+            const pkg = JSON.parse(fs.readFileSync('package.json', 'utf8'));
+            const currentVersion = String(pkg.version ?? '').trim();
+
+            const parseVersion = (value) => {
+              const [major = '0', minor = '0', patch = '0'] = String(value).replace(/^v/, '').split('.');
+              return {
+                major: Number(major),
+                minor: Number(minor),
+                patch: Number(patch),
+              };
+            };
+
+            const bumpPatch = (value) => {
+              const parsed = parseVersion(value);
+              return `${parsed.major}.${parsed.minor}.${parsed.patch + 1}`;
+            };
+
+            let latestTag = '';
+
+            try {
+              latestTag = execSync('git describe --tags --abbrev=0 --match "v*"', { encoding: 'utf8' }).trim();
+            } catch {
+              latestTag = '';
+            }
+
+            let nextVersion = currentVersion;
+
+            if (latestTag) {
+              const previous = parseVersion(latestTag);
+              const current = parseVersion(currentVersion);
+
+              if (previous.major === current.major && previous.minor === current.minor) {
+                nextVersion = bumpPatch(latestTag);
+              }
+            }
+
+            core.setOutput('version', nextVersion);
+            core.setOutput('tag', `v${nextVersion}`);
+
+  build:
+    name: Build on ${{ matrix.os }}
+    needs: prepare-version
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - windows-latest
+          - macos-latest
+          - ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Sync local version with release tag
+        run: npm version ${{ needs.prepare-version.outputs.version }} --no-git-tag-version --allow-same-version
+
+      - name: Build launcher
+        run: npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: launcher-${{ needs.prepare-version.outputs.tag }}-${{ matrix.os }}
+          path: release/*
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub release
+    needs:
+      - prepare-version
+      - build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          pattern: launcher-${{ needs.prepare-version.outputs.tag }}-*
+          merge-multiple: true
+
+      - name: Create or update GitHub release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ needs.prepare-version.outputs.tag }}
+          RELEASE_VERSION: ${{ needs.prepare-version.outputs.version }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" release-assets/* --clobber
+          else
+            gh release create "$RELEASE_TAG" release-assets/* --title "FlowBlock_mc Launcher $RELEASE_VERSION" --generate-notes --latest
+          fi
