@@ -77,7 +77,7 @@
       "artifactName": "${productName}-${version}.${ext}"
     },
     "dmg": {
-      "icon": "build/dmg-icon.icns",
+      "icon": "build/icon.icns",
       "iconSize": 100,
       "contents": [
         {

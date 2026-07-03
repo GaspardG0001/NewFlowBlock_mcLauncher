@@ -63,8 +63,7 @@ mac:
 
 # The DMG installer window appearance
 dmg:
-  background: build/dmg-background.png
-  icon: build/dmg-icon.icns
+  icon: build/icon.icns
   iconSize: 100
   title: "Install FlowBlock_mc Launcher"
   contents:
