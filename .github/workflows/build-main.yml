@@ -137,8 +137,15 @@ jobs:
           RELEASE_TAG: ${{ needs.prepare-version.outputs.tag }}
           RELEASE_VERSION: ${{ needs.prepare-version.outputs.version }}
         run: |
+          mapfile -t ASSETS < <(find release-assets -type f)
+
+          if [ ${#ASSETS[@]} -eq 0 ]; then
+            echo "No files found in release-assets"
+            exit 1
+          fi
+
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" release-assets/* --clobber
+            gh release upload "$RELEASE_TAG" "${ASSETS[@]}" --clobber
           else
-            gh release create "$RELEASE_TAG" release-assets/* --title "FlowBlock_mc Launcher $RELEASE_VERSION" --generate-notes --latest
+            gh release create "$RELEASE_TAG" "${ASSETS[@]}" --title "FlowBlock_mc Launcher $RELEASE_VERSION" --generate-notes --latest
           fi
