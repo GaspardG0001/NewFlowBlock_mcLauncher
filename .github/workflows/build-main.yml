@@ -145,7 +145,16 @@ jobs:
           fi
 
           if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            gh release upload "$RELEASE_TAG" "${ASSETS[@]}" --clobber
+            # Remove existing assets with same names to avoid 422 duplicate-name errors
+            for file in "${ASSETS[@]}"; do
+              name="$(basename "$file")"
+              gh release delete-asset "$RELEASE_TAG" "$name" -y 2>/dev/null || true
+            done
+
+            gh release upload "$RELEASE_TAG" "${ASSETS[@]}"
           else
-            gh release create "$RELEASE_TAG" "${ASSETS[@]}" --title "FlowBlock_mc Launcher $RELEASE_VERSION" --generate-notes --latest
+            gh release create "$RELEASE_TAG" "${ASSETS[@]}" \
+              --title "FlowBlock_mc Launcher $RELEASE_VERSION" \
+              --generate-notes \
+              --latest
           fi
