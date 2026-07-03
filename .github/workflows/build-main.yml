@@ -137,23 +137,38 @@ jobs:
           RELEASE_TAG: ${{ needs.prepare-version.outputs.tag }}
           RELEASE_VERSION: ${{ needs.prepare-version.outputs.version }}
         run: |
-          mapfile -t ASSETS < <(find release-assets -type f)
+          mapfile -t ASSETS < <(find release-assets -type f | sort)
 
           if [ ${#ASSETS[@]} -eq 0 ]; then
             echo "No files found in release-assets"
             exit 1
           fi
 
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            # Remove existing assets with same names to avoid 422 duplicate-name errors
-            for file in "${ASSETS[@]}"; do
-              name="$(basename "$file")"
-              gh release delete-asset "$RELEASE_TAG" "$name" -y 2>/dev/null || true
-            done
+          # Prevent duplicate release asset names (e.g. app-update.yml from multiple OS builds).
+          declare -A SEEN_NAMES=()
+          UPLOAD_ASSETS=()
 
-            gh release upload "$RELEASE_TAG" "${ASSETS[@]}"
+          for file in "${ASSETS[@]}"; do
+            name="$(basename "$file")"
+
+            if [[ -n "${SEEN_NAMES[$name]:-}" ]]; then
+              echo "Skipping duplicate asset name: $name ($file)"
+              continue
+            fi
+
+            SEEN_NAMES[$name]=1
+            UPLOAD_ASSETS+=("$file")
+          done
+
+          if [ ${#UPLOAD_ASSETS[@]} -eq 0 ]; then
+            echo "No unique assets available for release upload"
+            exit 1
+          fi
+
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" "${UPLOAD_ASSETS[@]}" --clobber
           else
-            gh release create "$RELEASE_TAG" "${ASSETS[@]}" \
+            gh release create "$RELEASE_TAG" "${UPLOAD_ASSETS[@]}" \
               --title "FlowBlock_mc Launcher $RELEASE_VERSION" \
               --generate-notes \
               --latest
