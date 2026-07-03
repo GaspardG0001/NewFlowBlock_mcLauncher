@@ -1,7 +1,10 @@
 {
   "name": "mcflowblock-launcher",
   "productName": "FlowBlock_mc Launcher",
-  "author": "GoldFrite",
+  "author": {
+    "name": "FlowBlock_mc",
+    "email": "contact@mcflowblock.com"
+  },
   "description": "Launcher pour jouer à FlowBlock_mc",
   "private": true,
   "version": "1.1.0",
@@ -74,7 +77,6 @@
       "artifactName": "${productName}-${version}.${ext}"
     },
     "dmg": {
-      "background": "build/background.png",
       "icon": "build/dmg-icon.icns",
       "iconSize": 100,
       "contents": [
