@@ -45,7 +45,7 @@ async function updateUserInterface() {
   const avatarSettingsEl = document.getElementById('settings-user-avatar') as HTMLImageElement
 
   if (nameEl) nameEl.innerText = shared.account.name
-  if (avatarEl) avatarEl.src = shared.avatar?.url ?? 'https://minotar.net/cube/steve/256.png'
+  if (avatarEl) avatarEl.src = `https://minotar.net/cube/${encodeURIComponent(shared.account.name)}/50`
   if (nameSettingsEl) nameSettingsEl.innerText = shared.account.name
   if (uuidSettingsEl) uuidSettingsEl.innerText = `UUID: ${shared.account.uuid}`
   if (typeSettingsEl) typeSettingsEl.innerHTML = getAccountIcon(shared.account.meta.type)
