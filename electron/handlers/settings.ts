@@ -1,8 +1,8 @@
 import { ipcMain, app, screen, dialog } from 'electron'
 import logger from 'electron-log/main'
-import * as fs from 'node:fs'
-import * as path from 'node:path'
-import * as os from 'node:os'
+import fs from 'node:fs'
+import path from 'node:path'
+import os from 'node:os'
 
 const settingsPath = path.join(app.getPath('userData'), 'settings.json')
 
@@ -25,7 +25,7 @@ export interface IGameSettings {
     width: number
     height: number
     fullscreen: boolean
-  },
+  }
   launcherAction: 'close' | 'keep' | 'hide'
 }
 
@@ -90,5 +90,4 @@ export function registerSettingsHandlers() {
     return result.filePaths[0] ?? null
   })
 }
-
 

@@ -1,8 +1,7 @@
 import { setUser, setView } from '../state'
-import { auth } from '../ipc'
+import { auth, skin } from '../ipc'
 import { Dialog } from './dialog'
 import logger from 'electron-log/renderer'
-// import _mockSession from '../_mock-msa'
 
 export function initLogin() {
   const btn = document.getElementById('btn-login-ms') as HTMLButtonElement | null
@@ -16,10 +15,11 @@ export function initLogin() {
 
     try {
       const session = await auth.login()
-      // const session = _mockSession
 
       if (session.success) {
-        setUser(session.account)
+        const [__, skins, capes, avatar] = await Promise.all([skin.reload(session.account), skin.getSkin(), skin.getCape(), skin.getAvatar()])
+
+        setUser(session.account, { skins, capes, avatar })
         setView('home')
       } else {
         logger.error(session.error)

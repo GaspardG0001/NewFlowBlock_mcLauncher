@@ -9,10 +9,13 @@ import type {
   CleanerEvents,
   DownloaderEvents,
   FilesManagerEvents,
+  IAvatar,
   IBackground,
   IBootstraps,
+  ICape,
   IMaintenance,
   IServerStatus,
+  ISkin,
   JavaEvents,
   LauncherEvents,
   PatcherEvents
@@ -34,7 +37,7 @@ contextBridge.exposeInMainWorld('api', {
   },
 
   game: {
-    launch: (payload: { account: Account; settings: IGameSettings, profileSlug: string }) => {
+    launch: (payload: { account: Account; settings: IGameSettings; profileSlug: string }) => {
       ipcRenderer.invoke('game:launch', payload)
     },
 
@@ -84,6 +87,18 @@ contextBridge.exposeInMainWorld('api', {
     launchDebug: (callback: (value: LauncherEvents['launch_debug'][0]) => void) =>
       ipcRenderer.on('game:launch_debug', (_event, value) => callback(value)),
     patchDebug: (callback: (value: PatcherEvents['patch_debug'][0]) => void) => ipcRenderer.on('game:patch_debug', (_event, value) => callback(value))
+  },
+  skin: {
+    reload: (account: Account): Promise<void | null> => ipcRenderer.invoke('skin:reload', account),
+    getSkin: (account?: Account): Promise<ISkin[] | null> => ipcRenderer.invoke('skin:get_skin', account),
+    getCape: (account?: Account): Promise<ICape[] | null> => ipcRenderer.invoke('skin:get_cape', account),
+    getAvatar: (account?: Account): Promise<IAvatar | null> => ipcRenderer.invoke('skin:get_avatar', account),
+    updateSkin: (source: string | Blob, model?: 'classic' | 'slim'): Promise<ISkin[] | null> => ipcRenderer.invoke('skin:update_skin', source, model),
+    // updateCape: (source: string | Blob): Promise<ICape[] | null> => ipcRenderer.invoke('skin:update_cape', source), --- Not implemented with Microsoft accounts ---
+    switchCape: (id: string): Promise<ICape[] | null> => ipcRenderer.invoke('skin:switch_cape', id),
+    deleteSkin: (id: string): Promise<ISkin[] | null> => ipcRenderer.invoke('skin:delete_skin', id),
+    // deleteCape: (): Promise<ICape[] | null> => ipcRenderer.invoke('skin:delete_cape'), --- Not implemented with Microsoft accounts ---
+    hideCape: (): Promise<ICape[] | null> => ipcRenderer.invoke('skin:hide_cape')
   },
   server: {
     getStatus: (ip: string, port?: number): Promise<IServerStatus> => ipcRenderer.invoke('server:status', ip, port)
