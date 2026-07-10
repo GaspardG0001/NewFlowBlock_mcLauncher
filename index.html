@@ -198,7 +198,7 @@
             <h2>Paramètres</h2>
             <nav>
               <button class="btn nav-btn" data-tab="account"><i class="bi bi-fw bi-person-fill"></i><span>Compte</span></button>
-              <button class="btn nav-btn" data-tab="skin"><i class="fa-fw fa-solid fa-shirt"></i><span>Skin</span></button>
+              <button class="btn nav-btn" data-tab="skin"><i class="bi bi-person-bounding-box"></i><span>Skin</span></button>
               <button class="btn nav-btn active" data-tab="game"><i class="bi bi-fw bi-boxes"></i><span>Jeu</span></button>
             </nav>
             <p id="version"></p>
@@ -278,28 +278,28 @@
             </section>
 
             <section class="tab-content skin-management" id="tab-skin">
-              <h3>Skin management</h3>
+              <h3>Gestion du skin</h3>
 
               <canvas id="skin-container"></canvas>
 
               <div class="setting-group">
-                <label><i class="fa-fw fa-solid fa-shirt"></i>&nbsp;&nbsp;Skins</label>
+                <label><i class="bi bi-person-bounding-box"></i>&nbsp;&nbsp;Skins</label>
 
                 <div id="skin-gallery" class="skin-gallery"></div>
                 <div id="add-skin" class="add-skin">
-                  <p class="add-skin-title">Add skin</p>
+                  <p class="add-skin-title">Ajouter un skin</p>
                   <div class="btns-add-skin">
-                    <button id="btn-add-skin-file" class="btn-add-skin active">File</button>
+                    <button id="btn-add-skin-file" class="btn-add-skin active">Fichier</button>
                     <button id="btn-add-skin-url" class="btn-add-skin">URL</button>
                   </div>
 
                   <div id="form-add-skin-file">
-                    <label for="input-add-skin-file">Skin file:</label>
+                    <label for="input-add-skin-file">Fichier de skin:</label>
                     <input type="file" id="input-add-skin-file" accept=".png" />
-                    <button class="btn btn-choose-file btn-secondary" id="btn-add-skin-choose-file">Choose file...</button>
+                    <button class="btn btn-choose-file btn-secondary" id="btn-add-skin-choose-file">Choisir un fichier...</button>
                     <div id="div-add-skin-file-selected" class="selected-file" style="display: none">
-                      <span id="span-add-skin-file-name">No file chosen</span>
-                      <button id="btn-selected-file-reset" class="btn btn-secondary btn-reset"><i class="fa-solid fa-times"></i></button>
+                      <span id="span-add-skin-file-name">Aucun fichier choisi</span>
+                      <button id="btn-selected-file-reset" class="btn btn-secondary btn-reset"><i class="bi bi-x"></i></button>
                     </div>
                   </div>
 
@@ -308,19 +308,19 @@
                     <input type="text" id="input-add-skin-url" placeholder="https://..." />
                   </div>
 
-                  <label for="add-skin-variant-field">Variant:</label>
+                  <label for="add-skin-variant-field">Variante:</label>
                   <div class="variant-options" id="add-skin-variant-field">
                     <input type="radio" id="input-add-skin-variant-classic" name="variant" value="classic" checked />
-                    <label for="input-add-skin-variant-classic">Classic</label>
+                    <label for="input-add-skin-variant-classic">Classique</label>
                     <input type="radio" id="input-add-skin-variant-slim" name="variant" value="slim" />
                     <label for="input-add-skin-variant-slim">Slim</label>
                   </div>
-                  <button id="btn-add-skin-submit" class="add-skin-btn-submit btn btn-secondary" disabled>Add and use</button>
+                  <button id="btn-add-skin-submit" class="add-skin-btn-submit btn btn-secondary" disabled>Ajouter et utiliser</button>
                 </div>
               </div>
 
               <div class="setting-group">
-                <label><i class="fa-fw fa-solid fa-square"></i>&nbsp;&nbsp;Cape</label>
+                <label><i class="bi bi-flag"></i>&nbsp;&nbsp;Cape</label>
 
                 <div id="cape-gallery" class="skin-gallery"></div>
               </div>

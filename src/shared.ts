@@ -92,7 +92,7 @@ const shared = {
       if (s.state === 'inactive' && s.id !== 'steve' && s.id !== 'alex') {
         const deleteBtn = document.createElement('button')
         deleteBtn.classList.add('btn-delete-skin', 'btn', 'btn-secondary')
-        deleteBtn.innerHTML = '<i class="fa-solid fa-times"></i>'
+        deleteBtn.innerHTML = '<i class="bi bi-x"></i>'
         deleteBtn.addEventListener('click', async (e) => {
           e.stopPropagation()
           try {
