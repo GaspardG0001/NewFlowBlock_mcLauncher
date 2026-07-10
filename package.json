@@ -106,22 +106,23 @@
       "artifactName": "${productName}-${version}.${ext}"
     }
   },
-  "devDependencies": {
-    "@types/dompurify": "^3.0.5",
-    "electron": "^41.2.0",
-    "electron-builder": "^26.8.1",
-    "prettier": "^3.8.2",
-    "sass-embedded": "^1.99.0",
-    "typescript": "^6.0.2",
-    "vite": "^8.0.8",
-    "vite-plugin-electron": "^0.29.1"
-  },
   "dependencies": {
-    "dompurify": "^3.3.3",
+    "dompurify": "^3.4.2",
     "electron-log": "^5.4.3",
     "electron-updater": "^6.8.3",
-    "eml-lib": "^2.2.1",
-    "marked": "^18.0.0",
-    "rss-parser": "^3.13.0"
+    "eml-lib": "^2.3.5",
+    "marked": "^18.0.3",
+    "rss-parser": "^3.13.0",
+    "skinview3d": "^3.4.1"
+  },
+  "devDependencies": {
+    "@types/dompurify": "^3.0.5",
+    "electron": "^41.5.0",
+    "electron-builder": "^26.8.1",
+    "prettier": "^3.8.3",
+    "sass-embedded": "^1.99.0",
+    "typescript": "^6.0.3",
+    "vite": "^8.0.10",
+    "vite-plugin-electron": "^0.29.1"
   }
 }

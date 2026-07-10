@@ -1,25 +1,30 @@
-import type { Account } from 'eml-lib'
+import type { Account, IAvatar, ICape, ISkin } from 'eml-lib'
 import logger from 'electron-log/renderer'
+import shared from './shared'
 import { permissions } from './ipc'
 
 export type ViewName = 'loading' | 'login' | 'home' | 'settings'
 export type BlockingViewName = 'maintenance' | 'update'
 
-let currentAccount: Account | null = null
-
 export function getUser() {
-  return currentAccount
+  return shared.account
 }
 
-export function setUser(account: Account) {
-  currentAccount = account
-  updateUserInterface()
+export async function setUser(account: Account, assets: { skins: ISkin[] | null; capes: ICape[] | null; avatar: IAvatar | null }) {
+  shared.account = account
+  shared.skins = assets.skins
+  shared.capes = assets.capes
+  shared.avatar = assets.avatar
+  await updateUserInterface()
   void updateUserRole(account.name)
   window.dispatchEvent(new Event('app:user-changed'))
 }
 
 export function logout() {
-  currentAccount = null
+  shared.account = null
+  shared.skins = null
+  shared.capes = null
+  shared.avatar = null
   const nameEl = document.getElementById('user-name')
   const roleEl = document.getElementById('settings-user-role')
   if (nameEl) nameEl.innerText = ''
@@ -27,22 +32,28 @@ export function logout() {
   window.dispatchEvent(new Event('app:user-changed'))
 }
 
-function updateUserInterface() {
-  if (!currentAccount) return
+async function updateUserInterface() {
+  if (!shared.account || !shared.skins) return
 
-  logger.log("Mise à jour de l'interface pour l'utilisateur :", currentAccount.name)
+  logger.log("Mise à jour de l'interface pour l'utilisateur :", shared.account.name)
 
   const nameEl = document.getElementById('user-name')
   const avatarEl = document.getElementById('user-avatar') as HTMLImageElement
   const nameSettingsEl = document.getElementById('settings-user-name')
   const uuidSettingsEl = document.getElementById('settings-user-uuid')
   const typeSettingsEl = document.getElementById('settings-user-type')
+  const avatarSettingsEl = document.getElementById('settings-user-avatar') as HTMLImageElement
 
-  if (nameEl) nameEl.innerText = currentAccount.name
-  if (avatarEl) avatarEl.src = `https://minotar.net/cube/${currentAccount.uuid ?? currentAccount.name}/100.png`
-  if (nameSettingsEl) nameSettingsEl.innerText = currentAccount.name
-  if (uuidSettingsEl) uuidSettingsEl.innerText = `UUID: ${currentAccount.uuid}`
-  if (typeSettingsEl) typeSettingsEl.innerHTML = getAccountIcon(currentAccount.meta.type)
+  if (nameEl) nameEl.innerText = shared.account.name
+  if (avatarEl) avatarEl.src = `https://minotar.net/cube/${encodeURIComponent(shared.account.name)}/50`
+  if (nameSettingsEl) nameSettingsEl.innerText = shared.account.name
+  if (uuidSettingsEl) uuidSettingsEl.innerText = `UUID: ${shared.account.uuid}`
+  if (typeSettingsEl) typeSettingsEl.innerHTML = getAccountIcon(shared.account.meta.type)
+  if (avatarSettingsEl) avatarSettingsEl.src = shared.avatar?.url ?? 'https://minotar.net/avatar/steve/256.png'
+
+  shared.resetMainView()
+  shared.resetSkinViews()
+  shared.resetCapesViews()
 }
 
 async function updateUserRole(username?: string) {
@@ -137,4 +148,6 @@ function setSettingsTab(tab: string) {
     tabContents[0].classList.add('active')
   }
 }
+
+
 

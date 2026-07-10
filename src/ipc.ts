@@ -16,7 +16,10 @@ import type {
   JavaEvents,
   LauncherEvents,
   PatcherEvents,
-  IProfile
+  IProfile,
+  ISkin,
+  ICape,
+  IAvatar
 } from 'eml-lib'
 
 declare global {
@@ -26,6 +29,18 @@ declare global {
         login: () => Promise<IAuthResponse>
         refresh: () => Promise<IAuthResponse>
         logout: () => Promise<{ success: boolean }>
+      }
+      skin: {
+        reload: (account?: Account) => Promise<void | null>
+        getSkin: (account?: Account) => Promise<ISkin[] | null>
+        getCape: (account?: Account) => Promise<ICape[] | null>
+        getAvatar: (account?: Account) => Promise<IAvatar | null>
+        updateSkin: (source: string | ArrayBuffer, model?: 'classic' | 'slim') => Promise<ISkin[] | null>
+        // updateCape: (source: string | Blob) => Promise<ICape[] | null> --- Not implemented with Microsoft accounts ---
+        switchCape: (id: string) => Promise<ICape[] | null>
+        deleteSkin: (id: string) => Promise<ISkin[] | null>
+        // deleteCape: () => Promise<ICape[] | null> --- Not implemented with Microsoft accounts ---
+        hideCape: () => Promise<ICape[] | null>
       }
       profiles: {
         get: () => Promise<IProfile[]>
@@ -110,6 +125,19 @@ export const auth = {
   refresh: async () => await window.api.auth.refresh()
 }
 
+export const skin = {
+  reload: async (account?: Account) => await window.api.skin.reload(account),
+  getSkin: async (account?: Account) => await window.api.skin.getSkin(account),
+  getCape: async (account?: Account) => await window.api.skin.getCape(account),
+  getAvatar: async (account?: Account) => await window.api.skin.getAvatar(account),
+  updateSkin: async (source: string | ArrayBuffer, model: 'classic' | 'slim') => await window.api.skin.updateSkin(source, model),
+  // updateCape: async (source: string | Blob) => await window.api.skin.updateCape(source), --- Not implemented with Microsoft accounts ---
+  switchCape: async (id: string) => await window.api.skin.switchCape(id),
+  deleteSkin: async (id: string) => await window.api.skin.deleteSkin(id),
+  // deleteCape: async () => await window.api.skin.deleteCape(), --- Not implemented with Microsoft accounts ---
+  hideCape: async () => await window.api.skin.hideCape()
+}
+
 export const profiles = {
   get: async () => await window.api.profiles.get()
 }
@@ -184,4 +212,5 @@ export const settings = {
 export const system = {
   getInfo: () => window.api.system.getInfo()
 }
+
 

@@ -8,7 +8,7 @@ Powered by <a href="https://github.com/Electron-Minecraft-Launcher/EML-Lib-v2"><
 
 [<p align="center"><img src="https://img.shields.io/badge/Discord-EML-5561e6?&style=for-the-badge">](https://emlproject.com/discord/github)
 [<img src="https://img.shields.io/badge/platforms-Windows,_macOS,_Linux-0077DA?style=for-the-badge&color=0077DA">](#platforms)
-[<img src="https://img.shields.io/badge/version-1.1.1-orangered?style=for-the-badge&color=orangered">](package.json)</p>
+[<img src="https://img.shields.io/badge/version-1.2.0-orangered?style=for-the-badge&color=orangered">](package.json)</p>
 
 <p>
 <center>
@@ -32,6 +32,7 @@ It is engineered to work in perfect synergy with **EML Lib** (for the core logic
 - **Microsoft authentication**: Full integration of the official authentication flow via EML Lib.
 - **Asset management**: Smart downloading of game files (Java, libraries, assets, mods) with hash validation, thanks to EML Lib and EML AdminTool (optional).
 - **Auto-update**: Automatic update system linked to your EML AdminTool instance.
+- **Skin & cape management**: View and equip skins and capes directly from the launcher.
 
 ## Installation & Development
 
