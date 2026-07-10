@@ -13,7 +13,7 @@ export function registerLauncherHandlers(mainWindow: BrowserWindow) {
 
     const launcher = new Launcher({
       url: ADMINTOOL_URL,
-      root: 'goldfrite',
+      root: 'mcflowblock',
       profile: { slug: profileSlug },
       account: account,
       cleaning: {
