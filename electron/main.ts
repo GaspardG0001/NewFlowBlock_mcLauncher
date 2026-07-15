@@ -12,6 +12,7 @@ import logger from 'electron-log/main'
 import { registerProfilesHandlers } from './handlers/profiles'
 import { registerSkinHandlers } from './handlers/skin'
 import { registerPermissionsHandlers } from './handlers/permissions'
+import { initializeStats } from './stats'
 
 const APP_TITLE = 'Launcher EML'
 const BG_COLOR = '#121212'
@@ -115,21 +116,22 @@ function configureAppMenu() {
   Menu.setApplicationMenu(menu)
 }
 
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   logger.initialize()
+  const stats = await initializeStats()
   configureAppMenu()
   createWindow()
 
   if (mainWindow) {
-    registerAuthHandlers(mainWindow)
+    registerAuthHandlers(mainWindow, stats)
     registerProfilesHandlers()
     registerServerHandlers()
     registerSkinHandlers()
     registerNewsHandlers()
     registerBackgroundHandlers()
     registerMaintenanceHandlers()
-    registerBootstrapHandlers(mainWindow)
-    registerLauncherHandlers(mainWindow)
+    registerBootstrapHandlers(mainWindow, stats)
+    registerLauncherHandlers(mainWindow, stats)
     registerSettingsHandlers()
     registerPermissionsHandlers()
   }

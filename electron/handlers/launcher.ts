@@ -1,12 +1,12 @@
 import { ipcMain, BrowserWindow, app } from 'electron'
 import { Launcher } from 'eml-lib'
-import type { Account, IProfile } from 'eml-lib'
+import type { Account, IProfile, Stats } from 'eml-lib'
 import type { IGameSettings } from './settings'
 import logger from 'electron-log/main'
 import { ADMINTOOL_URL } from '../const'
 
-export function registerLauncherHandlers(mainWindow: BrowserWindow) {
-  ipcMain.handle('game:launch', (_event, payload: { account: Account; settings: IGameSettings; profileSlug: string }) => {
+export function registerLauncherHandlers(mainWindow: BrowserWindow, stats: Stats) {
+  ipcMain.handle('game:launch', async (_event, payload: { account: Account; settings: IGameSettings; profileSlug: string }) => {
     const { account, settings, profileSlug } = payload
     const java = settings.java === 'system' ? { install: 'manual' as const, absolutePath: 'java' } : { install: 'auto' as const }
     logger.log('Lancement en cours')
@@ -30,6 +30,7 @@ export function registerLauncherHandlers(mainWindow: BrowserWindow) {
         fullscreen: settings.resolution.fullscreen
       }
     })
+    stats.attach(launcher)
 
     launcher.on('launch_compute_download', () => {
       logger.log('Calcul du téléchargement...')
@@ -147,7 +148,7 @@ export function registerLauncherHandlers(mainWindow: BrowserWindow) {
     })
 
     try {
-      launcher.launch()
+      await launcher.launch()
     } catch (err) {
       logger.error('Launcher error:', err)
     }
