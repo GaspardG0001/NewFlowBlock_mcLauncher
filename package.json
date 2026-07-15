@@ -110,14 +110,15 @@
     "dompurify": "^3.4.2",
     "electron-log": "^5.4.3",
     "electron-updater": "^6.8.3",
-    "eml-lib": "^2.3.5",
+    "eml-lib": "^2.5.0",
     "marked": "^18.0.3",
+    "pngjs": "^7.0.0",
     "rss-parser": "^3.13.0",
     "skinview3d": "^3.4.1"
   },
   "devDependencies": {
     "@types/dompurify": "^3.0.5",
-    "electron": "^41.5.0",
+    "electron": "^43.1.1",
     "electron-builder": "^26.8.1",
     "prettier": "^3.8.3",
     "sass-embedded": "^1.99.0",
