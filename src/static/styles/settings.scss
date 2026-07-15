@@ -168,6 +168,7 @@
     display: flex;
     align-items: center;
     gap: 10px;
+    margin-bottom: 6px;
     cursor: pointer;
 
     input {
@@ -180,9 +181,16 @@
   p {
     margin: 0;
     color: #aaa;
-    font-size: 0.80rem;
+    font-size: 0.8rem;
     line-height: 1.5;
   }
+}
+
+.setting-help-message {
+  margin: 8px 0 0;
+  color: #aaa;
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 /* Dual Slider Styles */

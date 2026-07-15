@@ -18,6 +18,7 @@ const resolutionList = [
 ]
 
 let currentSettings: IGameSettings
+let launcherActionBeforeCrashReports: IGameSettings['launcherAction'] = 'close'
 
 export async function initSettings() {
   const sysInfo = await system.getInfo()
@@ -59,6 +60,7 @@ function initUIListeners() {
   })
 
   crashReportsInput?.addEventListener('change', async () => {
+    syncLauncherActionWithCrashReports(crashReportsInput.checked)
     await saveSettings()
   })
 
@@ -221,7 +223,11 @@ function initFormValues(resolution: { width: number; height: number }) {
   }
   if (launcherActionSelect) launcherActionSelect.value = currentSettings.launcherAction
   if (javaSelect) javaSelect.value = currentSettings.java === 'bundled' ? 'bundled' : 'custom'
-  if (crashReportsInput) crashReportsInput.checked = currentSettings.sendCrashReports
+  if (crashReportsInput) {
+    crashReportsInput.checked = currentSettings.sendCrashReports
+    launcherActionBeforeCrashReports = currentSettings.launcherAction === 'hide' ? 'close' : currentSettings.launcherAction
+    syncLauncherActionWithCrashReports(crashReportsInput.checked)
+  }
 
   minInput.dispatchEvent(new Event('input'))
 }
@@ -252,6 +258,26 @@ async function saveSettings() {
 
   await settings.set(newSettings)
   currentSettings = newSettings
+}
+
+function syncLauncherActionWithCrashReports(enabled: boolean) {
+  const launcherActionSelect = document.getElementById('launcher-action-select') as HTMLSelectElement | null
+  const lockedMessage = document.getElementById('launcher-action-locked-message') as HTMLParagraphElement | null
+  if (!launcherActionSelect) return
+
+  if (enabled) {
+    if (launcherActionSelect.value !== 'hide') {
+      launcherActionBeforeCrashReports = launcherActionSelect.value as IGameSettings['launcherAction']
+    }
+    launcherActionSelect.value = 'hide'
+    launcherActionSelect.disabled = true
+    if (lockedMessage) lockedMessage.hidden = false
+    return
+  }
+
+  launcherActionSelect.disabled = false
+  launcherActionSelect.value = launcherActionBeforeCrashReports
+  if (lockedMessage) lockedMessage.hidden = true
 }
 
 async function addSkin() {
