@@ -4,7 +4,7 @@ import type { RssNewsArticle } from '../electron/handlers/news'
 import type { UserRole } from '../electron/handlers/permissions'
 import type {
   Account,
-  BootstrapsEvents,
+  BootstrapEvents,
   CleanerEvents,
   DownloaderEvents,
   FilesManagerEvents,
@@ -67,7 +67,7 @@ declare global {
         install: () => Promise<void>
         downloadProgress: (callback: (value: DownloaderEvents['download_progress'][0]) => void) => void
         downloadEnd: (callback: (value: DownloaderEvents['download_end'][0]) => void) => void
-        error: (callback: (value: BootstrapsEvents['bootstraps_error'][0]) => void) => void
+        error: (callback: (value: BootstrapEvents['bootstraps_error'][0]) => void) => void
       }
       game: {
         launch: (payload: { account: Account; settings: IGameSettings, profileSlug: string }) => Promise<void>
@@ -169,7 +169,7 @@ export const bootstraps = {
   install: async () => await window.api.bootstraps.install(),
   downloadProgress: (callback: (value: DownloaderEvents['download_progress'][0]) => void) => window.api.bootstraps.downloadProgress(callback),
   downloadEnd: (callback: (value: DownloaderEvents['download_end'][0]) => void) => window.api.bootstraps.downloadEnd(callback),
-  error: (callback: (value: BootstrapsEvents['bootstraps_error'][0]) => void) => window.api.bootstraps.error(callback)
+  error: (callback: (value: BootstrapEvents['bootstraps_error'][0]) => void) => window.api.bootstraps.error(callback)
 }
 
 export const game = {

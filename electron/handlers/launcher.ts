@@ -1,12 +1,12 @@
 import { ipcMain, BrowserWindow, app } from 'electron'
 import { Launcher } from 'eml-lib'
-import type { Account, IProfile } from 'eml-lib'
+import type { Account, CrashReport, IProfile, Stats } from 'eml-lib'
 import type { IGameSettings } from './settings'
 import logger from 'electron-log/main'
 import { ADMINTOOL_URL } from '../const'
 
-export function registerLauncherHandlers(mainWindow: BrowserWindow) {
-  ipcMain.handle('game:launch', (_event, payload: { account: Account; settings: IGameSettings; profileSlug: string }) => {
+export function registerLauncherHandlers(mainWindow: BrowserWindow, stats: Stats, crashReport: CrashReport) {
+  ipcMain.handle('game:launch', async (_event, payload: { account: Account; settings: IGameSettings; profileSlug: string }) => {
     const { account, settings, profileSlug } = payload
     const java = settings.java === 'system' ? { install: 'manual' as const, absolutePath: 'java' } : { install: 'auto' as const }
     logger.log('Lancement en cours')
@@ -30,6 +30,7 @@ export function registerLauncherHandlers(mainWindow: BrowserWindow) {
         fullscreen: settings.resolution.fullscreen
       }
     })
+    stats.attach(launcher)
 
     launcher.on('launch_compute_download', () => {
       logger.log('Calcul du téléchargement...')
@@ -123,9 +124,9 @@ export function registerLauncherHandlers(mainWindow: BrowserWindow) {
     launcher.on('launch_launch', (info) => {
       logger.log(`Lancement de Minecraft ${info.version} (${info.type}${info.loaderVersion ? ` ${info.loaderVersion}` : ''})...`)
       mainWindow.webContents.send('game:launch_launch', info)
-      if (settings.launcherAction === 'close') {
+      if (settings.launcherAction === 'close' && !settings.sendCrashReports) {
         setTimeout(() => app.quit(), 5000)
-      } else if (settings.launcherAction === 'hide') {
+      } else if (settings.launcherAction === 'hide' || settings.sendCrashReports) {
         setTimeout(() => mainWindow.minimize(), 5000)
       }
       mainWindow.webContents.send('game:launched')
@@ -138,6 +139,21 @@ export function registerLauncherHandlers(mainWindow: BrowserWindow) {
       logger.log(`Fermé avec le code ${code}.`)
       mainWindow.webContents.send('game:launch_close', code)
     })
+    launcher.on('launch_crash', async (crashData) => {
+      logger.error(`Minecraft a planté avec le code ${crashData.code}.`)
+
+      if (!settings.sendCrashReports) {
+        logger.log("Rapport de crash non envoyé : l'utilisateur n'a pas donné son consentement.")
+        return
+      }
+
+      try {
+        await crashReport.send(launcher, crashData)
+        logger.log('Rapport de crash envoyé avec succès.')
+      } catch (err) {
+        logger.error("Échec de l'envoi du rapport de crash :", err)
+      }
+    })
 
     launcher.on('launch_debug', (message) => {
       mainWindow.webContents.send('game:launch_debug', message)
@@ -147,7 +163,7 @@ export function registerLauncherHandlers(mainWindow: BrowserWindow) {
     })
 
     try {
-      launcher.launch()
+      await launcher.launch()
     } catch (err) {
       logger.error('Launcher error:', err)
     }

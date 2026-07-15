@@ -163,6 +163,36 @@
   }
 }
 
+.crash-report-setting {
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 6px;
+    cursor: pointer;
+
+    input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--primary);
+    }
+  }
+
+  p {
+    margin: 0;
+    color: #aaa;
+    font-size: 0.8rem;
+    line-height: 1.5;
+  }
+}
+
+.setting-help-message {
+  margin: 8px 0 0;
+  color: #aaa;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
 /* Dual Slider Styles */
 .dual-slider-container {
   position: relative;
