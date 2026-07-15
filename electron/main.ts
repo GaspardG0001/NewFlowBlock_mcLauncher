@@ -13,6 +13,7 @@ import { registerProfilesHandlers } from './handlers/profiles'
 import { registerSkinHandlers } from './handlers/skin'
 import { registerPermissionsHandlers } from './handlers/permissions'
 import { initializeStats } from './stats'
+import { initializeCrashReports } from './crashReports'
 
 const APP_TITLE = 'Launcher EML'
 const BG_COLOR = '#121212'
@@ -119,6 +120,7 @@ function configureAppMenu() {
 app.whenReady().then(async () => {
   logger.initialize()
   const stats = await initializeStats()
+  const crashReport = initializeCrashReports()
   configureAppMenu()
   createWindow()
 
@@ -131,7 +133,7 @@ app.whenReady().then(async () => {
     registerBackgroundHandlers()
     registerMaintenanceHandlers()
     registerBootstrapHandlers(mainWindow, stats)
-    registerLauncherHandlers(mainWindow, stats)
+    registerLauncherHandlers(mainWindow, stats, crashReport)
     registerSettingsHandlers()
     registerPermissionsHandlers()
   }

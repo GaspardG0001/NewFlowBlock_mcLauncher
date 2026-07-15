@@ -27,6 +27,7 @@ export interface IGameSettings {
     fullscreen: boolean
   }
   launcherAction: 'close' | 'keep' | 'hide'
+  sendCrashReports: boolean
 }
 
 export const DEFAULT_SETTINGS: IGameSettings = {
@@ -40,7 +41,8 @@ export const DEFAULT_SETTINGS: IGameSettings = {
     height: 720,
     fullscreen: false
   },
-  launcherAction: 'close'
+  launcherAction: 'close',
+  sendCrashReports: false
 }
 
 export function registerSettingsHandlers() {

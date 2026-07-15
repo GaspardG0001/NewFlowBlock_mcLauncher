@@ -36,6 +36,7 @@ function initUIListeners() {
   const tabContents = document.querySelectorAll('.tab-content')
   const tabButtons = document.querySelectorAll('.nav-btn')
   const logoutBtn = document.getElementById('btn-logout')
+  const crashReportsInput = document.getElementById('send-crash-reports') as HTMLInputElement | null
 
   const addSkinUrlBtn = document.getElementById('btn-add-skin-url')!
   const addSkinFileBtn = document.getElementById('btn-add-skin-file')!
@@ -55,6 +56,10 @@ function initUIListeners() {
   closeBtn?.addEventListener('click', async () => {
     await saveSettings()
     closeOverlay('settings')
+  })
+
+  crashReportsInput?.addEventListener('change', async () => {
+    await saveSettings()
   })
 
   logoutBtn?.addEventListener('click', async () => {
@@ -196,6 +201,7 @@ function initFormValues(resolution: { width: number; height: number }) {
   const resolutionSelect = document.getElementById('resolution-select') as HTMLSelectElement
   const launcherActionSelect = document.getElementById('launcher-action-select') as HTMLSelectElement
   const javaSelect = document.getElementById('java-select') as HTMLSelectElement
+  const crashReportsInput = document.getElementById('send-crash-reports') as HTMLInputElement
 
   if (minInput) minInput.value = currentSettings.memory.min + ''
   if (maxInput) maxInput.value = currentSettings.memory.max + ''
@@ -215,6 +221,7 @@ function initFormValues(resolution: { width: number; height: number }) {
   }
   if (launcherActionSelect) launcherActionSelect.value = currentSettings.launcherAction
   if (javaSelect) javaSelect.value = currentSettings.java === 'bundled' ? 'bundled' : 'custom'
+  if (crashReportsInput) crashReportsInput.checked = currentSettings.sendCrashReports
 
   minInput.dispatchEvent(new Event('input'))
 }
@@ -225,6 +232,7 @@ async function saveSettings() {
   const launcherActionSelect = document.getElementById('launcher-action-select') as HTMLSelectElement
   const resolutionSelect = document.getElementById('resolution-select') as HTMLSelectElement
   const javaSelect = document.getElementById('java-select') as HTMLSelectElement
+  const crashReportsInput = document.getElementById('send-crash-reports') as HTMLInputElement
 
   const newSettings: IGameSettings = {
     ...currentSettings,
@@ -238,7 +246,8 @@ async function saveSettings() {
       fullscreen: resolutionSelect.value === 'fullscreen'
     },
     java: javaSelect.value === 'bundled' ? 'bundled' : 'path',
-    launcherAction: launcherActionSelect.value as 'close' | 'keep' | 'hide'
+    launcherAction: launcherActionSelect.value as 'close' | 'keep' | 'hide',
+    sendCrashReports: crashReportsInput.checked
   }
 
   await settings.set(newSettings)
