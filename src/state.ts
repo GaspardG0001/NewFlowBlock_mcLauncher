@@ -4,7 +4,7 @@ import shared from './shared'
 import { permissions } from './ipc'
 
 export type ViewName = 'loading' | 'login' | 'home' | 'settings'
-export type BlockingViewName = 'maintenance' | 'update'
+export type BlockingViewName = 'maintenance'
 
 export function getUser() {
   return shared.account

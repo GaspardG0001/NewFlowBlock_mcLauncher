@@ -5,13 +5,11 @@ import type { RssNewsArticle } from './handlers/news'
 import type { UserRole } from './handlers/permissions'
 import type {
   Account,
-  BootstrapsEvents,
   CleanerEvents,
   DownloaderEvents,
   FilesManagerEvents,
   IAvatar,
   IBackground,
-  IBootstraps,
   ICape,
   IMaintenance,
   IServerStatus,
@@ -112,17 +110,6 @@ contextBridge.exposeInMainWorld('api', {
   },
   maintenance: {
     get: (account?: Account): Promise<IMaintenance | null> => ipcRenderer.invoke('maintenance:get', account)
-  },
-  bootstraps: {
-    check: (): Promise<IBootstraps> => ipcRenderer.invoke('bootstraps:check'),
-    download: (): Promise<string> => ipcRenderer.invoke('bootstraps:download'),
-    install: (): Promise<void> => ipcRenderer.invoke('bootstraps:install'),
-    downloadProgress: (callback: (value: DownloaderEvents['download_progress'][0]) => void) =>
-      ipcRenderer.on('bootstraps:download_progress', (_event, value) => callback(value)),
-    downloadEnd: (callback: (value: DownloaderEvents['download_end'][0]) => void) =>
-      ipcRenderer.on('bootstraps:download_end', (_event, value) => callback(value)),
-    error: (callback: (value: BootstrapsEvents['bootstraps_error'][0]) => void) =>
-      ipcRenderer.on('bootstraps:error', (_event, value) => callback(value))
   },
   settings: {
     get: (): Promise<IGameSettings> => ipcRenderer.invoke('settings:get'),
