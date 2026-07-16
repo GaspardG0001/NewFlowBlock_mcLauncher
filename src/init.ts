@@ -56,7 +56,8 @@ export async function bootstrap() {
 
   const up = await bootstraps.check()
   const bg = await background.get()
-  const mn = await maintenance.get()
+  const session = await auth.refresh()
+  const mn = await maintenance.get(session.success ? session.account : undefined)
   const bgUrl = bg?.file?.url ?? DEFAULT_BACKGROUND
   const logoUrl = await resolveImageWithFallback(REMOTE_LOGO, DEFAULT_LOGO)
 
@@ -99,10 +100,9 @@ export async function bootstrap() {
     return
   }
   try {
-    const [_, __, session] = await Promise.all([
+    const [_, __] = await Promise.all([
       preloadImage(bgUrl),
-      preloadImage(logoUrl),
-      auth.refresh()
+      preloadImage(logoUrl)
       // Promise.resolve(_mockSession)
     ])
 

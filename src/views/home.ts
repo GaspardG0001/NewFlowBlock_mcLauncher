@@ -1,5 +1,5 @@
 import { setViewWithTab, getUser } from '../state'
-import { game, news, server, settings, profiles, permissions } from '../ipc'
+import { game, news, server, settings, profiles } from '../ipc'
 import { Dialog } from './dialog'
 import logger from 'electron-log/renderer'
 
@@ -45,16 +45,10 @@ export function initHome() {
 
   let selectedProfile: any = null
   let allProfiles: any[] = []
-  let currentRole: 'Membre' | 'Développeur' = 'Membre'
   let totalToDownload = 0
   let totalDownloadedByType: { type: string; size: number }[] = []
 
-  const isDeveloperProfile = (profile: any) => typeof profile?.name === 'string' && profile.name.startsWith('[DEV] ')
-
-  const canAccessDeveloperProfiles = () => currentRole === 'Développeur'
-
-  const getVisibleProfiles = () =>
-    canAccessDeveloperProfiles() ? allProfiles : allProfiles.filter((profile) => !isDeveloperProfile(profile))
+  const getVisibleProfiles = () => allProfiles
 
   const setNoProfileAvailableState = () => {
     selectedProfile = null
@@ -76,8 +70,7 @@ export function initHome() {
     const user = getUser()
     if (!user) return
 
-    currentRole = await permissions.getRole(user.name)
-    allProfiles = await profiles.get()
+    allProfiles = await profiles.get(user)
 
     const visibleProfiles = getVisibleProfiles()
     if (visibleProfiles.length === 0) {
@@ -122,10 +115,6 @@ export function initHome() {
   }
 
   const selectProfile = (profile: any) => {
-    if (isDeveloperProfile(profile) && !canAccessDeveloperProfiles()) {
-      return
-    }
-
     selectedProfile = profile
     if (currentProfileName) currentProfileName.innerText = profile.name
     if (currentSelectedProfile) currentSelectedProfile.innerText = profile.name
@@ -244,11 +233,6 @@ export function initHome() {
   playBtn?.addEventListener('click', async () => {
     if (!selectedProfile) {
       await Dialog.show('Aucun profil n\'est disponible pour votre compte.', [{ text: 'Fermer', type: 'ok' }])
-      return
-    }
-
-    if (isDeveloperProfile(selectedProfile) && !canAccessDeveloperProfiles()) {
-      await Dialog.show('Ce profil est réservé aux développeurs.', [{ text: 'Fermer', type: 'ok' }])
       return
     }
 

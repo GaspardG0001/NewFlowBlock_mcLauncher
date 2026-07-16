@@ -16,7 +16,7 @@ export async function setUser(account: Account, assets: { skins: ISkin[] | null;
   shared.capes = assets.capes
   shared.avatar = assets.avatar
   await updateUserInterface()
-  void updateUserRole(account.name)
+  void updateUserRole(account)
   window.dispatchEvent(new Event('app:user-changed'))
 }
 
@@ -56,12 +56,12 @@ async function updateUserInterface() {
   shared.resetCapesViews()
 }
 
-async function updateUserRole(username?: string) {
+async function updateUserRole(account?: Account) {
   const roleEl = document.getElementById('settings-user-role')
   if (!roleEl) return
 
   try {
-    const role = await permissions.getRole(username)
+    const role = await permissions.getRole(account)
     roleEl.innerText = role
   } catch (err) {
     logger.error('Impossible de recuperer le role utilisateur :', err)

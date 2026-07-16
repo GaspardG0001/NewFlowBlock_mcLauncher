@@ -30,10 +30,10 @@ contextBridge.exposeInMainWorld('api', {
     logout: (): Promise<{ success: boolean }> => ipcRenderer.invoke('auth:logout')
   },
   profiles: {
-    get: (): Promise<any[]> => ipcRenderer.invoke('profiles:get')
+    get: (account?: Account): Promise<any[]> => ipcRenderer.invoke('profiles:get', account)
   },
   permissions: {
-    getRole: (username?: string): Promise<UserRole> => ipcRenderer.invoke('permissions:get_role', username)
+    getRole: (account?: Account): Promise<UserRole> => ipcRenderer.invoke('permissions:get_role', account)
   },
 
   game: {
@@ -111,7 +111,7 @@ contextBridge.exposeInMainWorld('api', {
     get: (): Promise<IBackground | null> => ipcRenderer.invoke('background:get')
   },
   maintenance: {
-    get: (): Promise<IMaintenance | null> => ipcRenderer.invoke('maintenance:get')
+    get: (account?: Account): Promise<IMaintenance | null> => ipcRenderer.invoke('maintenance:get', account)
   },
   bootstraps: {
     check: (): Promise<IBootstraps> => ipcRenderer.invoke('bootstraps:check'),
