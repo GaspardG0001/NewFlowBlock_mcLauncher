@@ -12,6 +12,7 @@ dist
 dist-electron
 dist-ssr
 release
+release-msix
 *.local
 
 .vscode/*
@@ -26,3 +27,6 @@ release
 
 /dist-electron
 dist-electron/preload.js
+
+# Development certificate
+devcert.pfx

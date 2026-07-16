@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && electron-builder",
-    "release:win": "npm run build && electron-builder --win",
+    "release:win": "npm run build && electron-builder --win && npx winapp cert generate && npx winapp pack .\\release\\win-unpacked --output .\\release-msix --cert .\\devcert.pfx --manifest .\\Package.appxmanifest",
     "release:mac": "npm run build && electron-builder --mac",
     "release:lin": "npm run build && electron-builder --linux"
   },
@@ -116,6 +116,7 @@
     "skinview3d": "^3.4.1"
   },
   "devDependencies": {
+    "@microsoft/winappcli": "^0.4.0",
     "@types/dompurify": "^3.0.5",
     "electron": "^43.1.1",
     "electron-builder": "^26.8.1",
