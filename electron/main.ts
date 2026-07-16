@@ -7,7 +7,6 @@ import { registerServerHandlers } from './handlers/server'
 import { registerNewsHandlers } from './handlers/news'
 import { registerBackgroundHandlers } from './handlers/background'
 import { registerMaintenanceHandlers } from './handlers/maintenance'
-import { registerBootstrapHandlers } from './handlers/bootstraps'
 import logger from 'electron-log/main'
 import { registerProfilesHandlers } from './handlers/profiles'
 import { registerSkinHandlers } from './handlers/skin'
@@ -132,7 +131,6 @@ app.whenReady().then(async () => {
     registerNewsHandlers()
     registerBackgroundHandlers()
     registerMaintenanceHandlers()
-    registerBootstrapHandlers(mainWindow, stats)
     registerLauncherHandlers(mainWindow, stats, crashReport)
     registerSettingsHandlers()
     registerPermissionsHandlers()

@@ -4,12 +4,10 @@ import type { RssNewsArticle } from '../electron/handlers/news'
 import type { UserRole } from '../electron/handlers/permissions'
 import type {
   Account,
-  BootstrapEvents,
   CleanerEvents,
   DownloaderEvents,
   FilesManagerEvents,
   IBackground,
-  IBootstraps,
   IMaintenance,
   IServerStatus,
   INewsCategory,
@@ -60,14 +58,6 @@ declare global {
       }
       maintenance: {
         get: (account?: Account) => Promise<IMaintenance | null>
-      }
-      bootstraps: {
-        check: () => Promise<IBootstraps>
-        download: () => Promise<string>
-        install: () => Promise<void>
-        downloadProgress: (callback: (value: DownloaderEvents['download_progress'][0]) => void) => void
-        downloadEnd: (callback: (value: DownloaderEvents['download_end'][0]) => void) => void
-        error: (callback: (value: BootstrapEvents['bootstraps_error'][0]) => void) => void
       }
       game: {
         launch: (payload: { account: Account; settings: IGameSettings, profileSlug: string }) => Promise<void>
@@ -161,15 +151,6 @@ export const background = {
 
 export const maintenance = {
   get: async (account?: Account) => await window.api.maintenance.get(account)
-}
-
-export const bootstraps = {
-  check: async () => await window.api.bootstraps.check(),
-  download: async () => await window.api.bootstraps.download(),
-  install: async () => await window.api.bootstraps.install(),
-  downloadProgress: (callback: (value: DownloaderEvents['download_progress'][0]) => void) => window.api.bootstraps.downloadProgress(callback),
-  downloadEnd: (callback: (value: DownloaderEvents['download_end'][0]) => void) => window.api.bootstraps.downloadEnd(callback),
-  error: (callback: (value: BootstrapEvents['bootstraps_error'][0]) => void) => window.api.bootstraps.error(callback)
 }
 
 export const game = {

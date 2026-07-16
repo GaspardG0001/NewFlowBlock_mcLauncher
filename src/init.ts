@@ -1,5 +1,5 @@
 import { setBlockingView, setUser, setView } from './state'
-import { auth, background, bootstraps, maintenance, skin } from './ipc'
+import { auth, background, maintenance, skin } from './ipc'
 import logger from 'electron-log/renderer'
 
 const DEFAULT_BACKGROUND = '/src/static/images/bg.png'
@@ -31,65 +31,18 @@ function resolveImageWithFallback(primaryUrl: string, fallbackUrl: string): Prom
   })
 }
 
-export async function bootstrap() {
+export async function initializeApp() {
   logger.log('Initialisation du launcher...')
 
   const bgElement = document.querySelector('.app-background') as HTMLElement
   const maintenanceDates = document.getElementById('maintenance-dates')!
   const maintenanceReason = document.getElementById('maintenance-reason')!
-  const progressBar = document.getElementById('update-progress-bar')
-  const progressLabel = document.getElementById('update-progress-label')
-  const progressPercent = document.getElementById('update-progress-percent')
   const logoElements = Array.from(document.querySelectorAll('.logo')) as HTMLImageElement[]
-
-  const setIndeterminate = (active: boolean) => {
-    if (!progressBar || !progressPercent) return
-
-    if (active) {
-      progressBar.classList.add('indeterminate')
-      progressPercent.style.display = 'none'
-    } else {
-      progressBar.classList.remove('indeterminate')
-      progressPercent.style.display = 'block'
-    }
-  }
-
-  const up = await bootstraps.check()
   const bg = await background.get()
   const session = await auth.refresh()
   const mn = await maintenance.get(session.success ? session.account : undefined)
   const bgUrl = bg?.file?.url ?? DEFAULT_BACKGROUND
   const logoUrl = await resolveImageWithFallback(REMOTE_LOGO, DEFAULT_LOGO)
-
-  if (up.updateAvailable) {
-    setIndeterminate(false)
-    progressBar!.style.width = '0%'
-    progressLabel!.innerText = 'Préparation de la mise à jour...'
-    progressPercent!.innerText = '0%'
-    setBlockingView('update')
-    await new Promise((r) => setTimeout(r, 500))
-    bootstraps.downloadProgress((value) => {
-      progressLabel!.innerText = `Téléchargement de la mise à jour...`
-      const percent = ((value.downloaded.size / value.total.amount) * 100).toFixed(2)
-      progressPercent!.innerText = `${percent}%`
-      progressBar!.style.width = `${percent}%`
-    })
-    bootstraps.downloadEnd(async () => {
-      setIndeterminate(true)
-      progressLabel!.innerText = `Installation...`
-      await bootstraps.install()
-    })
-    bootstraps.error((err) => {
-      logger.error('Error while downloading bootstraps:', err)
-    })
-    await bootstraps.download()
-    logger.log('Update installed, restarting launcher...')
-    setTimeout(() => {
-      window.location.reload()
-    }, 1000)
-
-    return
-  }
 
   if (mn) {
     const start = new Date(mn.startTime as Date)
