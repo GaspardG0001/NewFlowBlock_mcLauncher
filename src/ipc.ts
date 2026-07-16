@@ -43,10 +43,10 @@ declare global {
         hideCape: () => Promise<ICape[] | null>
       }
       profiles: {
-        get: () => Promise<IProfile[]>
+        get: (account?: Account) => Promise<IProfile[]>
       }
       permissions: {
-        getRole: (username?: string) => Promise<UserRole>
+        getRole: (account?: Account) => Promise<UserRole>
       }
       server: {
         getStatus: (ip: string, port?: number) => Promise<IServerStatus | null>
@@ -59,7 +59,7 @@ declare global {
         get: () => Promise<IBackground | null>
       }
       maintenance: {
-        get: () => Promise<IMaintenance | null>
+        get: (account?: Account) => Promise<IMaintenance | null>
       }
       bootstraps: {
         check: () => Promise<IBootstraps>
@@ -139,11 +139,11 @@ export const skin = {
 }
 
 export const profiles = {
-  get: async () => await window.api.profiles.get()
+  get: async (account?: Account) => await window.api.profiles.get(account)
 }
 
 export const permissions = {
-  getRole: async (username?: string) => await window.api.permissions.getRole(username)
+  getRole: async (account?: Account) => await window.api.permissions.getRole(account)
 }
 
 export const server = {
@@ -160,7 +160,7 @@ export const background = {
 }
 
 export const maintenance = {
-  get: async () => await window.api.maintenance.get()
+  get: async (account?: Account) => await window.api.maintenance.get(account)
 }
 
 export const bootstraps = {
