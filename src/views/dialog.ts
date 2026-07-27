@@ -21,9 +21,13 @@ class DialogSystem {
     this.buttonsEl = document.getElementById('dialog-buttons')!
   }
 
-  public async show<T = boolean>(message: string, buttons?: DialogButton[], title?: string): Promise<T> {
+  public async show<T = boolean>(message: string | Node, buttons?: DialogButton[], title?: string): Promise<T> {
     return new Promise<T>((resolve) => {
-      this.messageEl.innerText = message
+      if (typeof message === 'string') {
+        this.messageEl.innerText = message
+      } else {
+        this.messageEl.replaceChildren(message)
+      }
       this.buttonsEl.innerHTML = ''
 
       if (title) {
