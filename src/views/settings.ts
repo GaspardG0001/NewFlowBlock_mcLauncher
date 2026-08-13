@@ -225,7 +225,7 @@ function initFormValues(resolution: { width: number; height: number }) {
   if (javaSelect) javaSelect.value = currentSettings.java === 'bundled' ? 'bundled' : 'custom'
   if (crashReportsInput) {
     crashReportsInput.checked = currentSettings.sendCrashReports
-    launcherActionBeforeCrashReports = currentSettings.launcherAction === 'hide' ? 'close' : currentSettings.launcherAction
+    launcherActionBeforeCrashReports = currentSettings.launcherAction
     syncLauncherActionWithCrashReports(crashReportsInput.checked)
   }
 
