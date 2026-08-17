@@ -15,7 +15,7 @@
   <Identity
     Name="GaspardGrandidier.FlowBlockmcLauncher"
     Publisher="CN=F19DA2DD-FAFF-4699-BC69-ADA62742B7E8"
-    Version="1.3.2.0" />
+    Version="1.3.3.0" />
 
   <Properties>
     <DisplayName>FlowBlock_mc Launcher</DisplayName>
