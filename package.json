@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build && electron-builder",
-    "release:win": "npm run build && electron-builder --win && npx winapp cert generate && npx winapp pack .\\release\\win-unpacked --output .\\release-msix --cert .\\devcert.pfx --manifest .\\Package.appxmanifest",
+    "release:win": "npm run build && electron-builder --win && npx winapp cert generate && npx winapp pack .\\release\\win-arm64-unpacked --output .\\release-msix --cert .\\devcert.pfx --manifest .\\Package.appxmanifest",
     "release:mac": "npm run build && electron-builder --mac",
     "release:lin": "npm run build && electron-builder --linux"
   },
