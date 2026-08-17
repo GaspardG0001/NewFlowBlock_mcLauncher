@@ -20,6 +20,12 @@
     <DisplayName>FlowBlock_mc Launcher</DisplayName>
     <PublisherDisplayName>Gaspard Grandidier</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
+    <!--
+      Minecraft and its Java runtime are downloaded to AppData and then executed as a child
+      process. Keep those files outside the MSIX private virtual store so the Java process can
+      access the same paths as the launcher.
+    -->
+    <desktop6:FileSystemWriteVirtualization>disabled</desktop6:FileSystemWriteVirtualization>
   </Properties>
 
   <Dependencies>
@@ -47,5 +53,6 @@
 
   <Capabilities>
     <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="unvirtualizedResources" />
   </Capabilities>
 </Package>

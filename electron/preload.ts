@@ -35,9 +35,7 @@ contextBridge.exposeInMainWorld('api', {
   },
 
   game: {
-    launch: (payload: { account: Account; settings: IGameSettings; profileSlug: string }) => {
-      ipcRenderer.invoke('game:launch', payload)
-    },
+    launch: (payload: { account: Account; settings: IGameSettings; profileSlug: string }): Promise<void> => ipcRenderer.invoke('game:launch', payload),
 
     launchComputeDownload: (callback: () => void) => ipcRenderer.on('game:launch_compute_download', (_event) => callback()),
 
