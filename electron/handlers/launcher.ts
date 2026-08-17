@@ -30,6 +30,8 @@ export function registerLauncherHandlers(mainWindow: BrowserWindow, stats: Stats
         fullscreen: settings.resolution.fullscreen
       }
     })
+    logger.log(`Dossier du jeu : ${launcher.config.root}`)
+    logger.log(`Installation MSIX : ${Boolean(process.windowsStore)}`)
     stats.attach(launcher)
 
     launcher.on('launch_compute_download', () => {
@@ -166,6 +168,7 @@ export function registerLauncherHandlers(mainWindow: BrowserWindow, stats: Stats
       await launcher.launch()
     } catch (err) {
       logger.error('Launcher error:', err)
+      throw err
     }
   })
 }
