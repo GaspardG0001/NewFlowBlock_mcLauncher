@@ -9,21 +9,32 @@
   xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
   xmlns:desktop6="http://schemas.microsoft.com/appx/manifest/desktop/windows10/6"
   xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
-  IgnorableNamespaces="uap uap2 uap3 uap10 desktop desktop6 rescap">
+  xmlns:virtualization="http://schemas.microsoft.com/appx/manifest/virtualization/windows10"
+  IgnorableNamespaces="uap uap2 uap3 uap10 desktop desktop6 rescap virtualization">
 
   <Identity
     Name="GaspardGrandidier.FlowBlockmc"
     Publisher="CN=F19DA2DD-FAFF-4699-BC69-ADA62742B7E8"
-    Version="1.3.2.0" />
+    Version="1.3.3.0" />
 
   <Properties>
     <DisplayName>FlowBlock_mc Launcher</DisplayName>
     <PublisherDisplayName>Gaspard Grandidier</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
+    <!--
+      Minecraft and its Java runtime are downloaded to AppData and then executed as a child
+      process. Keep those files outside the MSIX private virtual store so the Java process can
+      access the same paths as the launcher.
+    -->
+    <virtualization:FileSystemWriteVirtualization>
+      <virtualization:ExcludedDirectories>
+        <virtualization:ExcludedDirectory>$(KnownFolder:RoamingAppData)\.goldfrite</virtualization:ExcludedDirectory>
+      </virtualization:ExcludedDirectories>
+    </virtualization:FileSystemWriteVirtualization>
   </Properties>
 
   <Dependencies>
-    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.18362.0" MaxVersionTested="10.0.26200.0" />
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.22000.0" MaxVersionTested="10.0.26200.0" />
   </Dependencies>
 
   <Resources>
@@ -47,5 +58,6 @@
 
   <Capabilities>
     <rescap:Capability Name="runFullTrust" />
+    <rescap:Capability Name="unvirtualizedResources" />
   </Capabilities>
 </Package>

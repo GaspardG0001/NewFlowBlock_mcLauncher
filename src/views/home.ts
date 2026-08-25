@@ -222,6 +222,16 @@ export function initHome() {
     }
   }
 
+  const resetLaunchProgress = () => {
+    setIndeterminate(false)
+    if (playBtn) playBtn.style.display = 'block'
+    if (progressContainer) progressContainer.classList.add('hidden')
+    if (progressBar) progressBar.style.width = '0%'
+    if (progressPercent) progressPercent.innerText = ''
+    totalToDownload = 0
+    totalDownloadedByType = []
+  }
+
   settingsBtn?.addEventListener('click', () => {
     setViewWithTab('settings', 'game')
   })
@@ -258,7 +268,15 @@ export function initHome() {
     `
 
     logger.log(message)
-    game.launch({ account: user, settings: config, profileSlug: selectedProfile?.slug })
+    void game.launch({ account: user, settings: config, profileSlug: selectedProfile?.slug }).catch(async (error) => {
+      logger.error('Impossible de lancer Minecraft :', error)
+      resetLaunchProgress()
+      await Dialog.show(
+        `Minecraft n'a pas pu être lancé.\n\n${error instanceof Error ? error.message : String(error)}`,
+        [{ text: 'Fermer', type: 'ok' }],
+        'Erreur de lancement'
+      )
+    })
   })
 
   profileSelector?.querySelector('.selected-profile')?.addEventListener('click', () => {
@@ -317,10 +335,7 @@ export function initHome() {
   })
   game.launched(() => {
     setTimeout(() => {
-      if (playBtn) playBtn.style.display = 'block'
-      if (progressContainer) progressContainer.classList.add('hidden')
-      if (progressBar) progressBar.style.width = '0%'
-      if (progressPercent) progressPercent.innerText = ''
+      resetLaunchProgress()
     }, 10000)
   })
 }
