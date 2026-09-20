@@ -53,6 +53,13 @@ function initUIListeners() {
   const addSkinUrlInput = document.getElementById('input-add-skin-url') as HTMLInputElement
 
   const addSkinSubmitBtn = document.getElementById('btn-add-skin-submit') as HTMLButtonElement
+  const syncActivateBtn = document.getElementById('btn-sync-activate') as HTMLButtonElement | null
+
+  syncActivateBtn?.addEventListener('click', async () => {
+    currentSettings.syncEnabled = true
+    await settings.set(currentSettings)
+    applySyncCardState()
+  })
 
   closeBtn?.addEventListener('click', async () => {
     await saveSettings()
@@ -229,7 +236,26 @@ function initFormValues(resolution: { width: number; height: number }) {
     syncLauncherActionWithCrashReports(crashReportsInput.checked)
   }
 
+  applySyncCardState()
   minInput.dispatchEvent(new Event('input'))
+}
+
+function applySyncCardState() {
+  const syncCard = document.querySelector('.sync-card') as HTMLDivElement | null
+  const syncActivateBtn = document.getElementById('btn-sync-activate') as HTMLButtonElement | null
+
+  if (!syncCard || !syncActivateBtn) return
+
+  if (currentSettings.syncEnabled) {
+    syncCard.style.display = 'none'
+    syncActivateBtn.disabled = true
+    syncActivateBtn.textContent = 'Activé'
+    return
+  }
+
+  syncCard.style.display = 'flex'
+  syncActivateBtn.disabled = false
+  syncActivateBtn.textContent = 'Activer'
 }
 
 async function saveSettings() {
@@ -253,7 +279,8 @@ async function saveSettings() {
     },
     java: javaSelect.value === 'bundled' ? 'bundled' : 'path',
     launcherAction: launcherActionSelect.value as 'close' | 'keep' | 'hide',
-    sendCrashReports: crashReportsInput.checked
+    sendCrashReports: crashReportsInput.checked,
+    syncEnabled: currentSettings.syncEnabled
   }
 
   await settings.set(newSettings)
