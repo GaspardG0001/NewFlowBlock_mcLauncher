@@ -511,3 +511,27 @@ p#version {
   color: #666;
   text-align: center;
 }
+
+.sync-card {
+  background: rgba(255, 255, 255, 0.03);
+  padding: 20px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.sync-card-text {
+  font-size: 13.5px;
+  color: #ddd;
+  margin-bottom: 15px;
+  width: 70%;
+  margin: 0;
+}
+
+.sync-card button {
+  width: 30%;
+}
