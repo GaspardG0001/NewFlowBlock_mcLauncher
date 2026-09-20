@@ -2,6 +2,7 @@ import { setViewWithTab, getUser } from '../state'
 import { game, news, server, settings, profiles } from '../ipc'
 import { Dialog } from './dialog'
 import logger from 'electron-log/renderer'
+import shared from '../shared'
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)
@@ -116,6 +117,7 @@ export function initHome() {
 
   const selectProfile = (profile: any) => {
     selectedProfile = profile
+    shared.selectedProfileSlug = profile.slug
     if (currentProfileName) currentProfileName.innerText = profile.name
     if (currentSelectedProfile) currentSelectedProfile.innerText = profile.name
     renderDropdown()

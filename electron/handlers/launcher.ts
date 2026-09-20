@@ -3,7 +3,7 @@ import { Launcher } from 'eml-lib'
 import type { Account, CrashReport, IProfile, Stats } from 'eml-lib'
 import type { IGameSettings } from './settings'
 import logger from 'electron-log/main'
-import { ADMINTOOL_URL } from '../const'
+import { ADMINTOOL_URL, GAME_ROOT } from '../const'
 
 export function registerLauncherHandlers(mainWindow: BrowserWindow, stats: Stats, crashReport: CrashReport) {
   ipcMain.handle('game:launch', async (_event, payload: { account: Account; settings: IGameSettings; profileSlug: string }) => {
@@ -13,7 +13,7 @@ export function registerLauncherHandlers(mainWindow: BrowserWindow, stats: Stats
 
     const launcher = new Launcher({
       url: ADMINTOOL_URL,
-      root: 'goldfrite',
+      root: GAME_ROOT,
       profile: { slug: profileSlug },
       account: account,
       cleaning: {

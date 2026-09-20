@@ -3,6 +3,7 @@ import type { IGameSettings, ISystemInfo } from './handlers/settings'
 import type { IAuthResponse } from './handlers/auth'
 import type { RssNewsArticle } from './handlers/news'
 import type { UserRole } from './handlers/permissions'
+import type { ISyncEntry } from './handlers/sync'
 import type {
   Account,
   CleanerEvents,
@@ -116,6 +117,14 @@ contextBridge.exposeInMainWorld('api', {
   },
   system: {
     getInfo: (): Promise<ISystemInfo> => ipcRenderer.invoke('system:info')
+  },
+  sync: {
+    getState: (): Promise<boolean> => ipcRenderer.invoke('sync:get_state'),
+    setEnabled: (enabled: boolean): Promise<boolean> => ipcRenderer.invoke('sync:set_enabled', enabled),
+    listInstanceEntries: (profileSlug: string): Promise<ISyncEntry[]> => ipcRenderer.invoke('sync:list_instance_entries', profileSlug),
+    getSelection: (profileSlug: string): Promise<string[]> => ipcRenderer.invoke('sync:get_selection', profileSlug),
+    setSelection: (profileSlug: string, selection: string[]): Promise<boolean> =>
+      ipcRenderer.invoke('sync:set_selection', { profileSlug, selection })
   }
 })
 

@@ -2,6 +2,7 @@ import type { IGameSettings, ISystemInfo } from '../electron/handlers/settings'
 import type { IAuthResponse } from '../electron/handlers/auth'
 import type { RssNewsArticle } from '../electron/handlers/news'
 import type { UserRole } from '../electron/handlers/permissions'
+import type { ISyncEntry } from '../electron/handlers/sync'
 import type {
   Account,
   CleanerEvents,
@@ -105,6 +106,13 @@ declare global {
       system: {
         getInfo: () => Promise<ISystemInfo>
       }
+      sync: {
+        getState: () => Promise<boolean>
+        setEnabled: (enabled: boolean) => Promise<boolean>
+        listInstanceEntries: (profileSlug: string) => Promise<ISyncEntry[]>
+        getSelection: (profileSlug: string) => Promise<string[]>
+        setSelection: (profileSlug: string, selection: string[]) => Promise<boolean>
+      }
     }
   }
 }
@@ -192,6 +200,14 @@ export const settings = {
 
 export const system = {
   getInfo: () => window.api.system.getInfo()
+}
+
+export const sync = {
+  getState: () => window.api.sync.getState(),
+  setEnabled: (enabled: boolean) => window.api.sync.setEnabled(enabled),
+  listInstanceEntries: (profileSlug: string) => window.api.sync.listInstanceEntries(profileSlug),
+  getSelection: (profileSlug: string) => window.api.sync.getSelection(profileSlug),
+  setSelection: (profileSlug: string, selection: string[]) => window.api.sync.setSelection(profileSlug, selection)
 }
 
 

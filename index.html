@@ -332,6 +332,18 @@
                 <p class="sync-card-text">FlowBlock Sync vous permet de synchroniser vos paramètres, mondes, ressources-pack et shaders entre différents appareils.</p>
                 <button id="btn-sync-activate" class="btn btn-primary">Activer</button>
               </div>
+
+              <div id="sync-selection" class="sync-selection" style="display: none">
+                <div class="setting-group">
+                  <label for="sync-profile-select"><i class="bi bi-folder2-open"></i>&nbsp;&nbsp;Profil</label>
+                  <select id="sync-profile-select"></select>
+                </div>
+
+                <div class="setting-group">
+                  <label><i class="bi bi-ui-checks"></i>&nbsp;&nbsp;Fichiers et dossiers à synchroniser</label>
+                  <div id="sync-files-list" class="sync-files-list"></div>
+                </div>
+              </div>
             </section>
 
           </main>

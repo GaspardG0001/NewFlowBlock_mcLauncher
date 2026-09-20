@@ -11,6 +11,7 @@ import logger from 'electron-log/main'
 import { registerProfilesHandlers } from './handlers/profiles'
 import { registerSkinHandlers } from './handlers/skin'
 import { registerPermissionsHandlers } from './handlers/permissions'
+import { registerSyncHandlers } from './handlers/sync'
 import { initializeStats } from './stats'
 import { initializeCrashReports } from './crashReports'
 
@@ -134,6 +135,7 @@ app.whenReady().then(async () => {
     registerLauncherHandlers(mainWindow, stats, crashReport)
     registerSettingsHandlers()
     registerPermissionsHandlers()
+    registerSyncHandlers()
   }
 })
 

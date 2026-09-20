@@ -16,6 +16,7 @@ const shared = {
   skins: null as ISkin[] | null,
   capes: null as ICape[] | null,
   avatar: null as IAvatar | null,
+  selectedProfileSlug: null as string | null,
   mainSkinViewer: null as SkinViewer | null,
   auxiliarySkinViewer: null as SkinViewer | null,
   cachedSkinThumbnails: new Map<string, string>(),

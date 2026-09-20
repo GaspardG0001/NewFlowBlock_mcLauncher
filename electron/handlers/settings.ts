@@ -28,7 +28,6 @@ export interface IGameSettings {
   }
   launcherAction: 'close' | 'keep' | 'hide'
   sendCrashReports: boolean
-  syncEnabled: boolean
 }
 
 export const DEFAULT_SETTINGS: IGameSettings = {
@@ -43,8 +42,7 @@ export const DEFAULT_SETTINGS: IGameSettings = {
     fullscreen: false
   },
   launcherAction: 'hide',
-  sendCrashReports: false,
-  syncEnabled: false
+  sendCrashReports: false
 }
 
 export function registerSettingsHandlers() {

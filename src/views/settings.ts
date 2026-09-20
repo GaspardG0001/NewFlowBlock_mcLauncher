@@ -1,5 +1,5 @@
-import { setView, closeOverlay } from '../state'
-import { auth, settings, system, skin } from '../ipc'
+import { setView, closeOverlay, getUser } from '../state'
+import { auth, settings, system, skin, sync, profiles as profilesApi } from '../ipc'
 import { Dialog } from './dialog'
 import type { IGameSettings } from '../../electron/handlers/settings'
 import shared from '../shared'
@@ -19,14 +19,17 @@ const resolutionList = [
 
 let currentSettings: IGameSettings
 let launcherActionBeforeCrashReports: IGameSettings['launcherAction'] = 'close'
+let syncEnabled = false
 
 export async function initSettings() {
   const sysInfo = await system.getInfo()
   currentSettings = await settings.get()
+  syncEnabled = await sync.getState()
 
   initUIListeners()
   initDualSlider(sysInfo.totalMem)
   initFormValues(sysInfo.resolution)
+  await initSyncTab()
 
   const versionElem = document.getElementById('version')
   if (versionElem) versionElem.innerText = `Launcher EML v${sysInfo.version}`
@@ -56,9 +59,10 @@ function initUIListeners() {
   const syncActivateBtn = document.getElementById('btn-sync-activate') as HTMLButtonElement | null
 
   syncActivateBtn?.addEventListener('click', async () => {
-    currentSettings.syncEnabled = true
-    await settings.set(currentSettings)
+    syncEnabled = true
+    await sync.setEnabled(true)
     applySyncCardState()
+    await renderSyncFileSelection()
   })
 
   closeBtn?.addEventListener('click', async () => {
@@ -154,7 +158,12 @@ function initUIListeners() {
       btn.classList.add('active')
       const targetTab = btn.getAttribute('data-tab')
       tabContents.forEach((c) => (c.id === `tab-${targetTab}` ? c.classList.add('active') : c.classList.remove('active')))
+      if (targetTab === 'sync' && syncEnabled) void renderSyncFileSelection()
     })
+  })
+
+  window.addEventListener('app:user-changed', () => {
+    if (syncEnabled) void renderSyncFileSelection()
   })
 }
 
@@ -236,26 +245,100 @@ function initFormValues(resolution: { width: number; height: number }) {
     syncLauncherActionWithCrashReports(crashReportsInput.checked)
   }
 
-  applySyncCardState()
   minInput.dispatchEvent(new Event('input'))
 }
 
 function applySyncCardState() {
   const syncCard = document.querySelector('.sync-card') as HTMLDivElement | null
   const syncActivateBtn = document.getElementById('btn-sync-activate') as HTMLButtonElement | null
+  const syncSelection = document.getElementById('sync-selection') as HTMLDivElement | null
 
   if (!syncCard || !syncActivateBtn) return
 
-  if (currentSettings.syncEnabled) {
+  if (syncEnabled) {
     syncCard.style.display = 'none'
     syncActivateBtn.disabled = true
     syncActivateBtn.textContent = 'Activé'
+    if (syncSelection) syncSelection.style.display = 'flex'
     return
   }
 
   syncCard.style.display = 'flex'
   syncActivateBtn.disabled = false
   syncActivateBtn.textContent = 'Activer'
+  if (syncSelection) syncSelection.style.display = 'none'
+}
+
+async function initSyncTab() {
+  applySyncCardState()
+  if (!syncEnabled) return
+  await renderSyncFileSelection()
+}
+
+async function renderSyncFileSelection() {
+  const profileSelect = document.getElementById('sync-profile-select') as HTMLSelectElement | null
+  if (!profileSelect) return
+
+  const user = getUser()
+  if (!user) return
+
+  const profileList = await profilesApi.get(user)
+  if (!profileList || profileList.length === 0) return
+
+  profileSelect.innerHTML = ''
+  profileList.forEach((profile) => {
+    const option = document.createElement('option')
+    option.value = profile.slug
+    option.innerText = profile.name
+    profileSelect.appendChild(option)
+  })
+
+  const preferredSlug = shared.selectedProfileSlug ?? profileList.find((p) => p.isDefault)?.slug ?? profileList[0].slug
+  profileSelect.value = preferredSlug
+
+  profileSelect.onchange = () => renderSyncFilesList(profileSelect.value)
+
+  await renderSyncFilesList(profileSelect.value)
+}
+
+async function renderSyncFilesList(profileSlug: string) {
+  const filesListEl = document.getElementById('sync-files-list')
+  if (!filesListEl) return
+
+  const [entries, selection] = await Promise.all([sync.listInstanceEntries(profileSlug), sync.getSelection(profileSlug)])
+
+  filesListEl.innerHTML = ''
+
+  if (entries.length === 0) {
+    filesListEl.innerHTML = '<p class="sync-files-empty">Aucun fichier trouvé pour ce profil.</p>'
+    return
+  }
+
+  entries.forEach((entry) => {
+    const row = document.createElement('label')
+    row.classList.add('sync-file-row')
+
+    const checkbox = document.createElement('input')
+    checkbox.type = 'checkbox'
+    checkbox.checked = selection.includes(entry.name)
+    checkbox.addEventListener('change', async () => {
+      const updated = checkbox.checked ? [...selection, entry.name] : selection.filter((name) => name !== entry.name)
+      selection.length = 0
+      selection.push(...updated)
+      await sync.setSelection(profileSlug, updated)
+    })
+
+    const icon = document.createElement('i')
+    icon.classList.add('bi', entry.isDirectory ? 'bi-folder' : 'bi-file-earmark')
+
+    const name = document.createElement('span')
+    name.innerText = entry.name
+
+    row.appendChild(checkbox)
+    row.appendChild(icon)
+    row.appendChild(name)
+    filesListEl.appendChild(row)
+  })
 }
 
 async function saveSettings() {
@@ -279,8 +362,7 @@ async function saveSettings() {
     },
     java: javaSelect.value === 'bundled' ? 'bundled' : 'path',
     launcherAction: launcherActionSelect.value as 'close' | 'keep' | 'hide',
-    sendCrashReports: crashReportsInput.checked,
-    syncEnabled: currentSettings.syncEnabled
+    sendCrashReports: crashReportsInput.checked
   }
 
   await settings.set(newSettings)
