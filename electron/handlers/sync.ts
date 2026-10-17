@@ -4,6 +4,8 @@ import path from 'node:path'
 import os from 'node:os'
 import logger from 'electron-log/main'
 import { GAME_ROOT } from '../const'
+import type { IAuthService } from './auth'
+import { clearSyncAuth, ensureSyncAuthenticated, type ISyncAuthStatus } from './syncAuth'
 
 const statePath = path.join(app.getPath('userData'), 'sync.json')
 
@@ -63,15 +65,29 @@ function getInstancePath(profileSlug: string) {
   return path.join(serverFolder, sanitizeSlug(profileSlug))
 }
 
-export function registerSyncHandlers() {
+export function registerSyncHandlers(authService: IAuthService) {
   ipcMain.handle('sync:get_state', async () => {
     return readState().enabled
   })
 
-  ipcMain.handle('sync:set_enabled', async (_event, enabled: boolean) => {
+  ipcMain.handle('sync:authenticate', async (): Promise<ISyncAuthStatus> => {
+    return ensureSyncAuthenticated(authService.getSavedAccountForSync, authService.refreshSavedAccountForSync)
+  })
+
+  ipcMain.handle('sync:set_enabled', async (_event, enabled: unknown) => {
+    if (typeof enabled !== 'boolean') throw new Error('Invalid Sync enabled value.')
+
+    if (enabled) {
+      await ensureSyncAuthenticated(authService.getSavedAccountForSync, authService.refreshSavedAccountForSync)
+    } else {
+      clearSyncAuth()
+    }
+
     const state = readState()
     state.enabled = enabled
-    return writeState(state)
+    const written = writeState(state)
+    if (!written && enabled) clearSyncAuth()
+    return written
   })
 
   ipcMain.handle('sync:list_instance_entries', async (_event, profileSlug: string): Promise<ISyncEntry[]> => {

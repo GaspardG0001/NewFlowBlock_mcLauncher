@@ -3,6 +3,7 @@ import type { IAuthResponse } from '../electron/handlers/auth'
 import type { RssNewsArticle } from '../electron/handlers/news'
 import type { UserRole } from '../electron/handlers/permissions'
 import type { ISyncEntry } from '../electron/handlers/sync'
+import type { ISyncAuthStatus } from '../electron/handlers/syncAuth'
 import type {
   Account,
   CleanerEvents,
@@ -108,6 +109,7 @@ declare global {
       }
       sync: {
         getState: () => Promise<boolean>
+        authenticate: () => Promise<ISyncAuthStatus>
         setEnabled: (enabled: boolean) => Promise<boolean>
         listInstanceEntries: (profileSlug: string) => Promise<ISyncEntry[]>
         getSelection: (profileSlug: string) => Promise<string[]>
@@ -204,10 +206,10 @@ export const system = {
 
 export const sync = {
   getState: () => window.api.sync.getState(),
+  authenticate: () => window.api.sync.authenticate(),
   setEnabled: (enabled: boolean) => window.api.sync.setEnabled(enabled),
   listInstanceEntries: (profileSlug: string) => window.api.sync.listInstanceEntries(profileSlug),
   getSelection: (profileSlug: string) => window.api.sync.getSelection(profileSlug),
   setSelection: (profileSlug: string, selection: string[]) => window.api.sync.setSelection(profileSlug, selection)
 }
-
 

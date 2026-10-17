@@ -59,10 +59,20 @@ function initUIListeners() {
   const syncActivateBtn = document.getElementById('btn-sync-activate') as HTMLButtonElement | null
 
   syncActivateBtn?.addEventListener('click', async () => {
-    syncEnabled = true
-    await sync.setEnabled(true)
-    applySyncCardState()
-    await renderSyncFileSelection()
+    if (!syncActivateBtn || syncActivateBtn.disabled) return
+    syncActivateBtn.disabled = true
+    try {
+      const enabled = await sync.setEnabled(true)
+      if (!enabled) throw new Error('Impossible d’enregistrer l’activation de Player Sync.')
+      syncEnabled = true
+      applySyncCardState()
+      await renderSyncFileSelection()
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Une erreur inconnue empêche l’activation de Player Sync.'
+      await Dialog.show(message, undefined, 'Player Sync indisponible')
+    } finally {
+      if (!syncEnabled) syncActivateBtn.disabled = false
+    }
   })
 
   closeBtn?.addEventListener('click', async () => {
@@ -158,7 +168,7 @@ function initUIListeners() {
       btn.classList.add('active')
       const targetTab = btn.getAttribute('data-tab')
       tabContents.forEach((c) => (c.id === `tab-${targetTab}` ? c.classList.add('active') : c.classList.remove('active')))
-      if (targetTab === 'sync' && syncEnabled) void renderSyncFileSelection()
+      if (targetTab === 'sync' && syncEnabled) void refreshSyncTab()
     })
   })
 
@@ -272,6 +282,16 @@ function applySyncCardState() {
 async function initSyncTab() {
   applySyncCardState()
   if (!syncEnabled) return
+  await refreshSyncTab()
+}
+
+async function refreshSyncTab() {
+  try {
+    await sync.authenticate()
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Une erreur inconnue empêche la connexion à Player Sync.'
+    await Dialog.show(message, undefined, 'Player Sync indisponible')
+  }
   await renderSyncFileSelection()
 }
 
@@ -431,4 +451,3 @@ async function addSkin() {
 function getAvailableResolutions(systemResolution: { width: number; height: number }) {
   return resolutionList.filter((res) => res.width <= systemResolution.width && res.height <= systemResolution.height)
 }
-

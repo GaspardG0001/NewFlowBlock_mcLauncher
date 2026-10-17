@@ -33,6 +33,7 @@ It is engineered to work in perfect synergy with **EML Lib** (for the core logic
 - **Asset management**: Smart downloading of game files (Java, libraries, assets, mods) with hash validation, thanks to EML Lib and EML AdminTool (optional).
 - **Auto-update**: Automatic update system linked to your EML AdminTool instance.
 - **Skin & cape management**: View and equip skins and capes directly from the launcher.
+- **Player Sync authentication**: Sign in to the Sync service with an online Microsoft account that owns Minecraft Java.
 
 ## Installation & Development
 
@@ -77,6 +78,12 @@ Modify the configuration file (`electron/const.ts`) to point to your distributio
 > [!TIP]
 > Since EML Lib v2.2.0, you can use EML Template without an EML AdminTool instance by providing a custom configuration object directly in the code. However, using EML AdminTool is recommended for easier management and updates.
 
+### Player Sync authentication
+
+Enabling Player Sync performs a handshake with the AdminTool configured in `electron/const.ts`. The launcher sends the Microsoft Minecraft access token only from Electron's main process; the returned Sync token stays in memory and is not sent to the renderer or saved to disk. A stable random device ID is stored in Electron's `userData` directory.
+
+The AdminTool must set `SYNC_ENABLED=true`, configure `JWT_SECRET_KEY` with at least 32 bytes, and provision an enabled Sync profile with include rules. The player must use an online Microsoft account with Minecraft Java access. This integration implements authentication only; it does not yet upload the selected local files.
+
 ### Icon customization
 
 To change the visual identity, replace the files in the `build/` folder:
@@ -101,4 +108,3 @@ Compiled files will be located in the `release/` folder.
 ## Contributing
 
 Contributions are welcome! For major changes, please open an issue first to discuss what you would like to change.
-

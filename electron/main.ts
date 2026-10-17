@@ -125,7 +125,7 @@ app.whenReady().then(async () => {
   createWindow()
 
   if (mainWindow) {
-    registerAuthHandlers(mainWindow, stats)
+    const authService = registerAuthHandlers(mainWindow, stats)
     registerProfilesHandlers()
     registerServerHandlers()
     registerSkinHandlers()
@@ -135,11 +135,10 @@ app.whenReady().then(async () => {
     registerLauncherHandlers(mainWindow, stats, crashReport)
     registerSettingsHandlers()
     registerPermissionsHandlers()
-    registerSyncHandlers()
+    registerSyncHandlers(authService)
   }
 })
 
 app.on('window-all-closed', () => {
   app.quit()
 })
-
