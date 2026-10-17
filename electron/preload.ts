@@ -4,7 +4,7 @@ import type { IAuthResponse } from './handlers/auth'
 import type { RssNewsArticle } from './handlers/news'
 import type { UserRole } from './handlers/permissions'
 import type { ISyncEntry } from './handlers/sync'
-import type { ISyncAuthStatus } from './handlers/syncAuth'
+import type { ISyncAuthResult } from './handlers/syncAuth'
 import type {
   Account,
   CleanerEvents,
@@ -121,8 +121,8 @@ contextBridge.exposeInMainWorld('api', {
   },
   sync: {
     getState: (): Promise<boolean> => ipcRenderer.invoke('sync:get_state'),
-    authenticate: (): Promise<ISyncAuthStatus> => ipcRenderer.invoke('sync:authenticate'),
-    setEnabled: (enabled: boolean): Promise<boolean> => ipcRenderer.invoke('sync:set_enabled', enabled),
+    authenticate: (): Promise<ISyncAuthResult> => ipcRenderer.invoke('sync:authenticate'),
+    setEnabled: (enabled: boolean): Promise<ISyncAuthResult> => ipcRenderer.invoke('sync:set_enabled', enabled),
     listInstanceEntries: (profileSlug: string): Promise<ISyncEntry[]> => ipcRenderer.invoke('sync:list_instance_entries', profileSlug),
     getSelection: (profileSlug: string): Promise<string[]> => ipcRenderer.invoke('sync:get_selection', profileSlug),
     setSelection: (profileSlug: string, selection: string[]): Promise<boolean> =>

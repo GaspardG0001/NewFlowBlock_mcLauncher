@@ -5,7 +5,7 @@ import os from 'node:os'
 import logger from 'electron-log/main'
 import { GAME_ROOT } from '../const'
 import type { IAuthService } from './auth'
-import { clearSyncAuth, ensureSyncAuthenticated, type ISyncAuthStatus } from './syncAuth'
+import { clearSyncAuth, ensureSyncAuthenticated, getSyncAuthFailure, type ISyncAuthResult } from './syncAuth'
 
 const statePath = path.join(app.getPath('userData'), 'sync.json')
 
@@ -70,15 +70,24 @@ export function registerSyncHandlers(authService: IAuthService) {
     return readState().enabled
   })
 
-  ipcMain.handle('sync:authenticate', async (): Promise<ISyncAuthStatus> => {
-    return ensureSyncAuthenticated(authService.getSavedAccountForSync, authService.refreshSavedAccountForSync)
+  ipcMain.handle('sync:authenticate', async (): Promise<ISyncAuthResult> => {
+    try {
+      const status = await ensureSyncAuthenticated(authService.getSavedAccountForSync, authService.refreshSavedAccountForSync)
+      return { success: true, status }
+    } catch (error) {
+      return getSyncAuthFailure(error)
+    }
   })
 
   ipcMain.handle('sync:set_enabled', async (_event, enabled: unknown) => {
     if (typeof enabled !== 'boolean') throw new Error('Invalid Sync enabled value.')
 
     if (enabled) {
-      await ensureSyncAuthenticated(authService.getSavedAccountForSync, authService.refreshSavedAccountForSync)
+      try {
+        await ensureSyncAuthenticated(authService.getSavedAccountForSync, authService.refreshSavedAccountForSync)
+      } catch (error) {
+        return getSyncAuthFailure(error)
+      }
     } else {
       clearSyncAuth()
     }
@@ -87,7 +96,14 @@ export function registerSyncHandlers(authService: IAuthService) {
     state.enabled = enabled
     const written = writeState(state)
     if (!written && enabled) clearSyncAuth()
-    return written
+    if (!written) {
+      return {
+        success: false,
+        message: 'Impossible d’enregistrer votre préférence FlowBlock Sync. Vérifiez l’espace disponible sur votre appareil et réessayez.',
+        canRetry: true
+      }
+    }
+    return { success: true }
   })
 
   ipcMain.handle('sync:list_instance_entries', async (_event, profileSlug: string): Promise<ISyncEntry[]> => {

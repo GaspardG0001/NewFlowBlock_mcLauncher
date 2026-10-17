@@ -59,20 +59,7 @@ function initUIListeners() {
   const syncActivateBtn = document.getElementById('btn-sync-activate') as HTMLButtonElement | null
 
   syncActivateBtn?.addEventListener('click', async () => {
-    if (!syncActivateBtn || syncActivateBtn.disabled) return
-    syncActivateBtn.disabled = true
-    try {
-      const enabled = await sync.setEnabled(true)
-      if (!enabled) throw new Error('Impossible d’enregistrer l’activation de Player Sync.')
-      syncEnabled = true
-      applySyncCardState()
-      await renderSyncFileSelection()
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Une erreur inconnue empêche l’activation de Player Sync.'
-      await Dialog.show(message, undefined, 'Player Sync indisponible')
-    } finally {
-      if (!syncEnabled) syncActivateBtn.disabled = false
-    }
+    await enableSync()
   })
 
   closeBtn?.addEventListener('click', async () => {
@@ -164,6 +151,7 @@ function initUIListeners() {
 
   tabButtons.forEach((btn) => {
     btn.addEventListener('click', () => {
+      if (btn instanceof HTMLButtonElement && btn.dataset.tab === 'sync' && btn.style.display === 'none') return
       tabButtons.forEach((b) => b.classList.remove('active'))
       btn.classList.add('active')
       const targetTab = btn.getAttribute('data-tab')
@@ -173,7 +161,7 @@ function initUIListeners() {
   })
 
   window.addEventListener('app:user-changed', () => {
-    if (syncEnabled) void renderSyncFileSelection()
+    if (syncEnabled) void refreshSyncTab()
   })
 }
 
@@ -285,14 +273,71 @@ async function initSyncTab() {
   await refreshSyncTab()
 }
 
-async function refreshSyncTab() {
+async function enableSync() {
+  const syncActivateBtn = document.getElementById('btn-sync-activate') as HTMLButtonElement | null
+  if (!syncActivateBtn || syncActivateBtn.disabled) return
+
+  syncActivateBtn.disabled = true
   try {
-    await sync.authenticate()
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Une erreur inconnue empêche la connexion à Player Sync.'
-    await Dialog.show(message, undefined, 'Player Sync indisponible')
+    const result = await sync.setEnabled(true)
+    if (!result.success) {
+      syncActivateBtn.disabled = false
+      setSyncTabAvailable(false)
+      await showSyncError(result, enableSync)
+      return
+    }
+
+    syncEnabled = true
+    setSyncTabAvailable(true)
+    applySyncCardState()
+    await renderSyncFileSelection()
+  } finally {
+    if (!syncEnabled) syncActivateBtn.disabled = false
   }
+}
+
+async function refreshSyncTab() {
+  const syncSelection = document.getElementById('sync-selection') as HTMLDivElement | null
+  if (syncSelection) syncSelection.style.display = 'none'
+
+  const result = await sync.authenticate()
+  if (!result.success) {
+    setSyncTabAvailable(false)
+    await showSyncError(result, refreshSyncTab)
+    return
+  }
+
+  setSyncTabAvailable(true)
+  applySyncCardState()
   await renderSyncFileSelection()
+}
+
+function setSyncTabAvailable(available: boolean) {
+  const syncTabButton = document.querySelector('.nav-btn[data-tab="sync"]') as HTMLButtonElement | null
+  const syncTab = document.getElementById('tab-sync')
+  if (!syncTabButton || !syncTab) return
+
+  syncTabButton.style.display = available ? '' : 'none'
+  syncTab.style.display = available ? '' : 'none'
+
+  if (!available && syncTabButton.classList.contains('active')) {
+    const gameTabButton = document.querySelector('.nav-btn[data-tab="game"]') as HTMLButtonElement | null
+    gameTabButton?.click()
+  }
+}
+
+async function showSyncError(
+  failure: { message: string; canRetry: boolean },
+  retry: () => Promise<void> | void
+): Promise<void> {
+  const buttons = failure.canRetry
+    ? [
+        { text: 'Fermer', type: 'cancel' as const },
+        { text: 'Réessayer', type: 'ok' as const, action: retry }
+      ]
+    : [{ text: 'D’accord', type: 'ok' as const }]
+
+  await Dialog.show(failure.message, buttons, 'FlowBlock Sync')
 }
 
 async function renderSyncFileSelection() {

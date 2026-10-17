@@ -20,6 +20,10 @@ export interface ISyncAuthStatus {
   deviceId: string
 }
 
+export type ISyncAuthResult =
+  | { success: true; status: ISyncAuthStatus }
+  | { success: false; message: string; canRetry: boolean }
+
 interface IHandshakeResponse extends ISyncAuthStatus {
   success: true
   token: string
@@ -105,26 +109,28 @@ function validateHandshakeResponse(body: unknown, deviceId: string): IHandshakeR
 function getHandshakeError(status: number): Error {
   switch (status) {
     case 400:
-      return new Error('La requête Player Sync est invalide. Vérifiez la configuration du launcher.')
+      return new Error('HTTP_400')
     case 401:
-      return new Error('Microsoft n’a pas validé ce compte. Reconnectez-vous puis réessayez.')
+      return new Error('HTTP_401')
     case 403:
-      return new Error('Player Sync nécessite un compte Microsoft possédant Minecraft Java.')
+      return new Error('HTTP_403')
     case 409:
-      return new Error('Un conflit temporaire empêche Player Sync. Réessayez dans quelques instants.')
+      return new Error('HTTP_409')
     case 429:
-      return new Error('Trop de tentatives Player Sync. Attendez avant de réessayer.')
+      return new Error('HTTP_429')
+    case 404:
+      return new Error('HTTP_404')
     case 502:
     case 503:
-      return new Error('Player Sync est temporairement indisponible. Réessayez plus tard.')
+      return new Error(`HTTP_${status}`)
     default:
-      return new Error(`L’authentification Player Sync a échoué (HTTP ${status}).`)
+      return new Error('HTTP_OTHER')
   }
 }
 
 function assertMicrosoftAccount(account: Account): void {
   if (account.meta?.type !== 'msa' || !account.meta.online || typeof account.accessToken !== 'string' || account.accessToken.length === 0) {
-    throw new Error('Player Sync nécessite un compte Microsoft en ligne avec Minecraft Java.')
+    throw new Error('ACCOUNT_NOT_ELIGIBLE')
   }
 }
 
@@ -211,6 +217,85 @@ export async function ensureSyncAuthenticated(
     return syncAuthStatus
   }
   return authenticate(await getAccount(), refreshAccount)
+}
+
+export function getSyncAuthFailure(error: unknown): Extract<ISyncAuthResult, { success: false }> {
+  const message = error instanceof Error ? error.message : ''
+
+  if (message === 'ACCOUNT_NOT_ELIGIBLE') {
+    return {
+      success: false,
+      message: 'FlowBlock Sync nécessite un compte Microsoft connecté qui possède Minecraft Java.',
+      canRetry: false
+    }
+  }
+  if (message === 'HTTP_404') {
+    return {
+      success: false,
+      message: 'Le service de synchronisation n’est pas disponible pour le moment. Réessayez plus tard.',
+      canRetry: true
+    }
+  }
+  if (message === 'HTTP_400' || message === 'HTTP_OTHER') {
+    return {
+      success: false,
+      message: 'FlowBlock Sync ne peut pas se connecter pour le moment. Réessayez plus tard ou contactez le support si le problème persiste.',
+      canRetry: true
+    }
+  }
+  if (message === 'HTTP_401') {
+    return {
+      success: false,
+      message: 'Votre connexion Microsoft a expiré. Reconnectez-vous au launcher, puis réessayez.',
+      canRetry: false
+    }
+  }
+  if (message === 'HTTP_403') {
+    return {
+      success: false,
+      message: 'Ce compte n’a pas accès à FlowBlock Sync. Vérifiez que vous utilisez le compte Microsoft associé à Minecraft Java.',
+      canRetry: false
+    }
+  }
+  if (message === 'HTTP_409' || message === 'HTTP_429') {
+    return {
+      success: false,
+      message: message === 'HTTP_429'
+        ? 'Vous avez fait plusieurs tentatives rapprochées. Patientez un peu avant de réessayer.'
+        : 'Le service est momentanément occupé. Réessayez dans quelques instants.',
+      canRetry: true
+    }
+  }
+  if (message === 'HTTP_502' || message === 'HTTP_503' || message.includes('ne répond pas') || message.includes('Impossible de joindre')) {
+    return {
+      success: false,
+      message: 'FlowBlock Sync est temporairement inaccessible. Vérifiez votre connexion Internet et réessayez plus tard.',
+      canRetry: true
+    }
+  }
+  if (message.includes('Connectez-vous avec un compte Microsoft') || message.includes('session enregistrée est invalide')) {
+    return { success: false, message, canRetry: false }
+  }
+  if (message.includes('invalide') && message.includes('réponse')) {
+    return {
+      success: false,
+      message: 'Le service FlowBlock Sync a renvoyé une réponse inattendue. Réessayez plus tard.',
+      canRetry: true
+    }
+  }
+  if (message.includes('date d’expiration') || message.includes('informations de joueur')) {
+    return {
+      success: false,
+      message: 'Le service FlowBlock Sync a renvoyé une réponse inattendue. Réessayez plus tard.',
+      canRetry: true
+    }
+  }
+
+  return {
+    success: false,
+    message: 'Impossible de connecter FlowBlock Sync pour le moment. Vérifiez votre connexion et réessayez.',
+    canRetry: true
+  }
 }
 
 export async function getSyncBearerToken(getAccount: () => Promise<Account>, refreshAccount: () => Promise<Account>): Promise<string> {
