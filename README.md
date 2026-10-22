@@ -80,9 +80,9 @@ Modify the configuration file (`electron/const.ts`) to point to your distributio
 
 ### Player Sync authentication
 
-Enabling Player Sync performs a handshake with the AdminTool configured in `electron/const.ts`. The launcher sends the Microsoft Minecraft access token only from Electron's main process; the returned Sync token stays in memory and is not sent to the renderer or saved to disk. A stable random device ID is stored in Electron's `userData` directory.
+Enabling Player Sync performs a handshake with the AdminTool configured in `electron/const.ts`. Use **Synchroniser maintenant** in the Sync settings to send the selected local files. Electron prepares each upload with the AdminTool, streams the file to its signed storage URL with the required checksum header, and commits the upload. The Microsoft Minecraft access token and Sync bearer token remain in Electron's main process; the Sync token is kept in memory and is not sent to the renderer or saved to disk. A stable random device ID is stored in Electron's `userData` directory.
 
-The AdminTool must set `SYNC_ENABLED=true`, configure `JWT_SECRET_KEY` with at least 32 bytes, and provision an enabled Sync profile with include rules. The player must use an online Microsoft account with Minecraft Java access. This integration implements authentication only; it does not yet upload the selected local files.
+The AdminTool must set `SYNC_ENABLED=true`, configure `JWT_SECRET_KEY` with at least 32 bytes, configure compatible object storage, and provision an enabled Sync profile with include rules. The player must use an online Microsoft account with Minecraft Java access. Uploads are manual and one-way: this launcher does not download remote files or merge conflicts. It remembers committed file versions locally; because the current AdminTool branch does not expose the manifest endpoint, a file whose remote version is unknown (for example, a file first uploaded from another device) is rejected as a version conflict rather than overwritten.
 
 ### Icon customization
 

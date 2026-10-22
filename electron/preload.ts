@@ -3,7 +3,7 @@ import type { IGameSettings, ISystemInfo } from './handlers/settings'
 import type { IAuthResponse } from './handlers/auth'
 import type { RssNewsArticle } from './handlers/news'
 import type { UserRole } from './handlers/permissions'
-import type { ISyncEntry } from './handlers/sync'
+import type { ISyncEntry, ISyncUploadProgress, ISyncUploadResult } from './handlers/sync'
 import type { ISyncAuthResult } from './handlers/syncAuth'
 import type {
   Account,
@@ -37,7 +37,8 @@ contextBridge.exposeInMainWorld('api', {
   },
 
   game: {
-    launch: (payload: { account: Account; settings: IGameSettings; profileSlug: string }): Promise<void> => ipcRenderer.invoke('game:launch', payload),
+    launch: (payload: { account: Account; settings: IGameSettings; profileSlug: string }): Promise<void> =>
+      ipcRenderer.invoke('game:launch', payload),
 
     launchComputeDownload: (callback: () => void) => ipcRenderer.on('game:launch_compute_download', (_event) => callback()),
 
@@ -126,6 +127,13 @@ contextBridge.exposeInMainWorld('api', {
     listInstanceEntries: (profileSlug: string): Promise<ISyncEntry[]> => ipcRenderer.invoke('sync:list_instance_entries', profileSlug),
     getSelection: (profileSlug: string): Promise<string[]> => ipcRenderer.invoke('sync:get_selection', profileSlug),
     setSelection: (profileSlug: string, selection: string[]): Promise<boolean> =>
-      ipcRenderer.invoke('sync:set_selection', { profileSlug, selection })
+      ipcRenderer.invoke('sync:set_selection', { profileSlug, selection }),
+    uploadSelected: (profileSlug: string, profileId: string): Promise<ISyncUploadResult> =>
+      ipcRenderer.invoke('sync:upload_selected', { profileSlug, profileId }),
+    onUploadProgress: (callback: (progress: ISyncUploadProgress) => void): (() => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, progress: ISyncUploadProgress) => callback(progress)
+      ipcRenderer.on('sync:upload_progress', listener)
+      return () => ipcRenderer.removeListener('sync:upload_progress', listener)
+    }
   }
 })

@@ -20,6 +20,7 @@ const resolutionList = [
 let currentSettings: IGameSettings
 let launcherActionBeforeCrashReports: IGameSettings['launcherAction'] = 'close'
 let syncEnabled = false
+let syncProfileIds = new Map<string, string>()
 
 export async function initSettings() {
   const sysInfo = await system.getInfo()
@@ -57,6 +58,41 @@ function initUIListeners() {
 
   const addSkinSubmitBtn = document.getElementById('btn-add-skin-submit') as HTMLButtonElement
   const syncActivateBtn = document.getElementById('btn-sync-activate') as HTMLButtonElement | null
+  const syncUploadBtn = document.getElementById('btn-sync-upload') as HTMLButtonElement | null
+
+  sync.onUploadProgress(renderSyncUploadProgress)
+
+  syncUploadBtn?.addEventListener('click', async () => {
+    if (syncUploadBtn.disabled) return
+
+    const profileSelect = document.getElementById('sync-profile-select') as HTMLSelectElement | null
+    const status = document.getElementById('sync-upload-status')
+    const profileSlug = profileSelect?.value
+    const profileId = profileSlug ? syncProfileIds.get(profileSlug) : undefined
+    if (!profileSlug || !profileId) {
+      const message = 'Ce profil n’est plus disponible. Actualisez la liste puis réessayez.'
+      if (status) status.textContent = message
+      await Dialog.show(message, [{ text: 'D’accord', type: 'ok' }], 'FlowBlock Sync')
+      return
+    }
+
+    syncUploadBtn.disabled = true
+    syncUploadBtn.textContent = 'Synchronisation…'
+    if (status) status.textContent = 'Préparation des fichiers…'
+    try {
+      const result = await sync.uploadSelected(profileSlug, profileId)
+      if (status) {
+        status.textContent = `${result.syncedFiles} fichier${result.syncedFiles === 1 ? '' : 's'} synchronisé${result.syncedFiles === 1 ? '' : 's'}.`
+      }
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'La synchronisation n’a pas abouti. Réessayez plus tard.'
+      if (status) status.textContent = 'La synchronisation a échoué.'
+      await Dialog.show(message, [{ text: 'D’accord', type: 'ok' }], 'FlowBlock Sync')
+    } finally {
+      syncUploadBtn.disabled = false
+      syncUploadBtn.textContent = 'Synchroniser maintenant'
+    }
+  })
 
   syncActivateBtn?.addEventListener('click', async () => {
     await enableSync()
@@ -326,10 +362,7 @@ function setSyncTabAvailable(available: boolean) {
   }
 }
 
-async function showSyncError(
-  failure: { message: string; canRetry: boolean },
-  retry: () => Promise<void> | void
-): Promise<void> {
+async function showSyncError(failure: { message: string; canRetry: boolean }, retry: () => Promise<void> | void): Promise<void> {
   const buttons = failure.canRetry
     ? [
         { text: 'Fermer', type: 'cancel' as const },
@@ -351,11 +384,15 @@ async function renderSyncFileSelection() {
   if (!profileList || profileList.length === 0) return
 
   profileSelect.innerHTML = ''
+  syncProfileIds = new Map()
   profileList.forEach((profile) => {
     const option = document.createElement('option')
     option.value = profile.slug
     option.innerText = profile.name
     profileSelect.appendChild(option)
+    if (typeof profile.id === 'string' && profile.id.length > 0) {
+      syncProfileIds.set(profile.slug, profile.id)
+    }
   })
 
   const preferredSlug = shared.selectedProfileSlug ?? profileList.find((p) => p.isDefault)?.slug ?? profileList[0].slug
@@ -364,6 +401,25 @@ async function renderSyncFileSelection() {
   profileSelect.onchange = () => renderSyncFilesList(profileSelect.value)
 
   await renderSyncFilesList(profileSelect.value)
+}
+
+function renderSyncUploadProgress(progress: {
+  completedFiles: number
+  totalFiles: number
+  currentPath: string | null
+  bytesSent: number
+  fileSize: number
+}) {
+  const status = document.getElementById('sync-upload-status')
+  if (!status) return
+
+  if (!progress.currentPath) {
+    status.textContent = `${progress.completedFiles}/${progress.totalFiles} fichier${progress.totalFiles === 1 ? '' : 's'} traité${progress.totalFiles === 1 ? '' : 's'}`
+    return
+  }
+
+  const percentage = progress.fileSize > 0 ? Math.min(100, Math.floor((progress.bytesSent / progress.fileSize) * 100)) : 0
+  status.textContent = `Envoi ${progress.completedFiles + 1}/${progress.totalFiles} — ${progress.currentPath} (${percentage} %)`
 }
 
 async function renderSyncFilesList(profileSlug: string) {

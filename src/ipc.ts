@@ -2,7 +2,7 @@ import type { IGameSettings, ISystemInfo } from '../electron/handlers/settings'
 import type { IAuthResponse } from '../electron/handlers/auth'
 import type { RssNewsArticle } from '../electron/handlers/news'
 import type { UserRole } from '../electron/handlers/permissions'
-import type { ISyncEntry } from '../electron/handlers/sync'
+import type { ISyncEntry, ISyncUploadProgress, ISyncUploadResult } from '../electron/handlers/sync'
 import type { ISyncAuthResult } from '../electron/handlers/syncAuth'
 import type {
   Account,
@@ -62,7 +62,7 @@ declare global {
         get: (account?: Account) => Promise<IMaintenance | null>
       }
       game: {
-        launch: (payload: { account: Account; settings: IGameSettings, profileSlug: string }) => Promise<void>
+        launch: (payload: { account: Account; settings: IGameSettings; profileSlug: string }) => Promise<void>
 
         launchComputeDownload: (callback: () => void) => void
 
@@ -114,6 +114,8 @@ declare global {
         listInstanceEntries: (profileSlug: string) => Promise<ISyncEntry[]>
         getSelection: (profileSlug: string) => Promise<string[]>
         setSelection: (profileSlug: string, selection: string[]) => Promise<boolean>
+        uploadSelected: (profileSlug: string, profileId: string) => Promise<ISyncUploadResult>
+        onUploadProgress: (callback: (progress: ISyncUploadProgress) => void) => () => void
       }
     }
   }
@@ -164,7 +166,7 @@ export const maintenance = {
 }
 
 export const game = {
-  launch: async (payload: { account: Account; settings: IGameSettings, profileSlug: string }) => await window.api.game.launch(payload),
+  launch: async (payload: { account: Account; settings: IGameSettings; profileSlug: string }) => await window.api.game.launch(payload),
   launchComputeDownload: (callback: () => void) => window.api.game.launchComputeDownload(callback),
   launchDownload: (callback: (value: LauncherEvents['launch_download'][0]) => void) => window.api.game.launchDownload(callback),
   downloadProgress: (callback: (value: DownloaderEvents['download_progress'][0]) => void) => window.api.game.downloadProgress(callback),
@@ -210,5 +212,7 @@ export const sync = {
   setEnabled: (enabled: boolean) => window.api.sync.setEnabled(enabled),
   listInstanceEntries: (profileSlug: string) => window.api.sync.listInstanceEntries(profileSlug),
   getSelection: (profileSlug: string) => window.api.sync.getSelection(profileSlug),
-  setSelection: (profileSlug: string, selection: string[]) => window.api.sync.setSelection(profileSlug, selection)
+  setSelection: (profileSlug: string, selection: string[]) => window.api.sync.setSelection(profileSlug, selection),
+  uploadSelected: (profileSlug: string, profileId: string) => window.api.sync.uploadSelected(profileSlug, profileId),
+  onUploadProgress: (callback: (progress: ISyncUploadProgress) => void) => window.api.sync.onUploadProgress(callback)
 }
