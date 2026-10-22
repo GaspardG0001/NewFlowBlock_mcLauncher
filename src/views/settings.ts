@@ -81,6 +81,11 @@ function initUIListeners() {
     if (status) status.textContent = 'Préparation des fichiers…'
     try {
       const result = await sync.uploadSelected(profileSlug, profileId)
+      if (!result.success) {
+        if (status) status.textContent = 'La synchronisation a échoué.'
+        await Dialog.show(result.message, [{ text: 'D’accord', type: 'ok' }], 'FlowBlock Sync')
+        return
+      }
       if (status) {
         status.textContent = `${result.syncedFiles} fichier${result.syncedFiles === 1 ? '' : 's'} synchronisé${result.syncedFiles === 1 ? '' : 's'}.`
       }

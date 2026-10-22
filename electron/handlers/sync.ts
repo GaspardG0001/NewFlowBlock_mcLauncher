@@ -44,9 +44,7 @@ export interface ISyncUploadProgress {
   fileSize: number
 }
 
-export interface ISyncUploadResult {
-  syncedFiles: number
-}
+export type ISyncUploadResult = { success: true; syncedFiles: number } | { success: false; message: string }
 
 interface ISyncFile {
   absolutePath: string
@@ -444,136 +442,142 @@ export function registerSyncHandlers(authService: IAuthService) {
   })
 
   ipcMain.handle('sync:upload_selected', async (event, payload: { profileSlug: unknown; profileId: unknown }): Promise<ISyncUploadResult> => {
-    const { profileSlug, profileId } = validateProfile(payload?.profileSlug, payload?.profileId)
-    const state = readState()
-    if (!state.enabled) throw new SyncUploadError('Activez FlowBlock Sync avant de lancer un envoi.')
-
-    const selectedNames = state.selections[profileSlug] ?? [...DEFAULT_SYNC_SELECTION]
-    if (selectedNames.length === 0) throw new SyncUploadError('Sélectionnez au moins un fichier ou dossier à synchroniser.')
-
-    const instancePath = getInstancePath(profileSlug)
-    if (!fs.existsSync(instancePath)) throw new SyncUploadError('Aucun fichier à envoyer pour ce profil.')
-
-    let files: ISyncFile[]
     try {
-      const availableEntries = new Set(await fs.promises.readdir(instancePath))
-      files = await collectSelectedFiles(
-        instancePath,
-        selectedNames.filter((name) => availableEntries.has(name))
-      )
-    } catch (error) {
-      logger.error('Impossible de lire les fichiers sélectionnés pour FlowBlock Sync :', error)
-      if (error instanceof SyncUploadError) throw error
-      throw new SyncUploadError('Impossible d’accéder aux fichiers sélectionnés. Vérifiez qu’ils sont disponibles puis réessayez.')
-    }
-    if (files.length === 0) throw new SyncUploadError('Aucun fichier à envoyer dans la sélection de ce profil.')
+      const { profileSlug, profileId } = validateProfile(payload?.profileSlug, payload?.profileId)
+      const state = readState()
+      if (!state.enabled) throw new SyncUploadError('Activez FlowBlock Sync avant de lancer un envoi.')
 
-    let authStatus: Awaited<ReturnType<typeof ensureSyncAuthenticated>>
-    let token: string
-    try {
-      authStatus = await ensureSyncAuthenticated(authService.getSavedAccountForSync, authService.refreshSavedAccountForSync)
-      token = await getSyncBearerToken(authService.getSavedAccountForSync, authService.refreshSavedAccountForSync)
-    } catch (error) {
-      const failure = getSyncAuthFailure(error)
-      throw new SyncUploadError(failure.message)
-    }
+      const selectedNames = state.selections[profileSlug] ?? [...DEFAULT_SYNC_SELECTION]
+      if (selectedNames.length === 0) throw new SyncUploadError('Sélectionnez au moins un fichier ou dossier à synchroniser.')
 
-    let syncedFiles = 0
+      const instancePath = getInstancePath(profileSlug)
+      if (!fs.existsSync(instancePath)) throw new SyncUploadError('Aucun fichier à envoyer pour ce profil.')
 
-    for (const [index, file] of files.entries()) {
+      let files: ISyncFile[]
       try {
-        sendUploadProgress(event.sender, {
-          completedFiles: syncedFiles,
-          totalFiles: files.length,
-          currentPath: file.relativePath,
-          bytesSent: 0,
-          fileSize: 0
-        })
-
-        const { hash, size } = await hashFile(file.absolutePath)
-        const baseVersion = state.versions[profileSlug]?.[file.relativePath] ?? null
-        const prepareResponse = await requestSyncJson(
-          new URL(`/api/sync/profiles/${encodeURIComponent(profileId)}/upload/prepare`, ADMINTOOL_URL),
-          token,
-          {
-            path: file.relativePath,
-            hash,
-            size: String(size),
-            baseVersion,
-            deviceId: authStatus.deviceId
-          }
+        const availableEntries = new Set(await fs.promises.readdir(instancePath))
+        files = await collectSelectedFiles(
+          instancePath,
+          selectedNames.filter((name) => availableEntries.has(name))
         )
-        const prepared = validatePreparedUpload(prepareResponse, hash)
+      } catch (error) {
+        logger.error('Impossible de lire les fichiers sélectionnés pour FlowBlock Sync :', error)
+        if (error instanceof SyncUploadError) throw error
+        throw new SyncUploadError('Impossible d’accéder aux fichiers sélectionnés. Vérifiez qu’ils sont disponibles puis réessayez.')
+      }
+      if (files.length === 0) throw new SyncUploadError('Aucun fichier à envoyer dans la sélection de ce profil.')
 
-        if (prepared.uploadRequired) {
+      let authStatus: Awaited<ReturnType<typeof ensureSyncAuthenticated>>
+      let token: string
+      try {
+        authStatus = await ensureSyncAuthenticated(authService.getSavedAccountForSync, authService.refreshSavedAccountForSync)
+        token = await getSyncBearerToken(authService.getSavedAccountForSync, authService.refreshSavedAccountForSync)
+      } catch (error) {
+        const failure = getSyncAuthFailure(error)
+        throw new SyncUploadError(failure.message)
+      }
+
+      let syncedFiles = 0
+
+      for (const [index, file] of files.entries()) {
+        try {
           sendUploadProgress(event.sender, {
             completedFiles: syncedFiles,
             totalFiles: files.length,
             currentPath: file.relativePath,
             bytesSent: 0,
-            fileSize: size
+            fileSize: 0
           })
-          await putFile(prepared.uploadUrl!, prepared.uploadHeaders!, file.absolutePath, size, (bytesSent) => {
+
+          const { hash, size } = await hashFile(file.absolutePath)
+          const baseVersion = state.versions[profileSlug]?.[file.relativePath] ?? null
+          const prepareResponse = await requestSyncJson(
+            new URL(`/api/sync/profiles/${encodeURIComponent(profileId)}/upload/prepare`, ADMINTOOL_URL),
+            token,
+            {
+              path: file.relativePath,
+              hash,
+              size: String(size),
+              baseVersion,
+              deviceId: authStatus.deviceId
+            }
+          )
+          const prepared = validatePreparedUpload(prepareResponse, hash)
+
+          if (prepared.uploadRequired) {
             sendUploadProgress(event.sender, {
               completedFiles: syncedFiles,
               totalFiles: files.length,
               currentPath: file.relativePath,
-              bytesSent,
+              bytesSent: 0,
               fileSize: size
             })
+            await putFile(prepared.uploadUrl!, prepared.uploadHeaders!, file.absolutePath, size, (bytesSent) => {
+              sendUploadProgress(event.sender, {
+                completedFiles: syncedFiles,
+                totalFiles: files.length,
+                currentPath: file.relativePath,
+                bytesSent,
+                fileSize: size
+              })
+            })
+          }
+
+          const commitResponse = await requestSyncJson(
+            new URL(`/api/sync/profiles/${encodeURIComponent(profileId)}/upload/${encodeURIComponent(prepared.uploadId)}/commit`, ADMINTOOL_URL),
+            token,
+            {}
+          )
+
+          if (
+            !isRecord(commitResponse) ||
+            commitResponse.success !== true ||
+            !isRecord(commitResponse.file) ||
+            commitResponse.file.path !== file.relativePath ||
+            commitResponse.file.hash !== hash ||
+            typeof commitResponse.file.version !== 'number' ||
+            !Number.isSafeInteger(commitResponse.file.version) ||
+            commitResponse.file.version < 1
+          ) {
+            throw new SyncUploadError('La synchronisation est temporairement indisponible. Réessayez plus tard.')
+          }
+
+          const committedVersion = commitResponse.file.version
+          state.versions[profileSlug] ??= {}
+          state.versions[profileSlug][file.relativePath] = committedVersion
+          if (!writeState(state)) {
+            throw new SyncUploadError('Un fichier a été envoyé, mais la synchronisation ne peut pas continuer. Relancez-la.')
+          }
+
+          syncedFiles += 1
+          sendUploadProgress(event.sender, {
+            completedFiles: syncedFiles,
+            totalFiles: files.length,
+            currentPath: index + 1 < files.length ? files[index + 1].relativePath : null,
+            bytesSent: 0,
+            fileSize: 0
           })
+        } catch (error) {
+          logger.error(`Échec de l’envoi FlowBlock Sync pour ${file.relativePath} :`, error)
+          if (error instanceof SyncUploadError) {
+            throw new SyncUploadError(`${error.message} (${syncedFiles}/${files.length} fichiers envoyés).`)
+          }
+          const code = error && typeof error === 'object' && 'code' in error ? error.code : undefined
+          if (code === 'ENOENT') {
+            throw new SyncUploadError('Un fichier sélectionné est introuvable. Actualisez la sélection puis réessayez.')
+          }
+          if (code === 'EACCES' || code === 'EPERM') {
+            throw new SyncUploadError('L’accès à un fichier sélectionné est refusé. Fermez le jeu puis réessayez.')
+          }
+          throw new SyncUploadError('Un fichier n’a pas pu être synchronisé. Vérifiez votre connexion puis réessayez.')
         }
-
-        const commitResponse = await requestSyncJson(
-          new URL(`/api/sync/profiles/${encodeURIComponent(profileId)}/upload/${encodeURIComponent(prepared.uploadId)}/commit`, ADMINTOOL_URL),
-          token,
-          {}
-        )
-
-        if (
-          !isRecord(commitResponse) ||
-          commitResponse.success !== true ||
-          !isRecord(commitResponse.file) ||
-          commitResponse.file.path !== file.relativePath ||
-          commitResponse.file.hash !== hash ||
-          typeof commitResponse.file.version !== 'number' ||
-          !Number.isSafeInteger(commitResponse.file.version) ||
-          commitResponse.file.version < 1
-        ) {
-          throw new SyncUploadError('La synchronisation est temporairement indisponible. Réessayez plus tard.')
-        }
-
-        const committedVersion = commitResponse.file.version
-        state.versions[profileSlug] ??= {}
-        state.versions[profileSlug][file.relativePath] = committedVersion
-        if (!writeState(state)) {
-          throw new SyncUploadError('Un fichier a été envoyé, mais la synchronisation ne peut pas continuer. Relancez-la.')
-        }
-
-        syncedFiles += 1
-        sendUploadProgress(event.sender, {
-          completedFiles: syncedFiles,
-          totalFiles: files.length,
-          currentPath: index + 1 < files.length ? files[index + 1].relativePath : null,
-          bytesSent: 0,
-          fileSize: 0
-        })
-      } catch (error) {
-        logger.error(`Échec de l’envoi FlowBlock Sync pour ${file.relativePath} :`, error)
-        if (error instanceof SyncUploadError) {
-          throw new SyncUploadError(`${error.message} (${syncedFiles}/${files.length} fichiers envoyés).`)
-        }
-        const code = error && typeof error === 'object' && 'code' in error ? error.code : undefined
-        if (code === 'ENOENT') {
-          throw new SyncUploadError('Un fichier sélectionné est introuvable. Actualisez la sélection puis réessayez.')
-        }
-        if (code === 'EACCES' || code === 'EPERM') {
-          throw new SyncUploadError('L’accès à un fichier sélectionné est refusé. Fermez le jeu puis réessayez.')
-        }
-        throw new SyncUploadError('Un fichier n’a pas pu être synchronisé. Vérifiez votre connexion puis réessayez.')
       }
-    }
 
-    return { syncedFiles }
+      return { success: true, syncedFiles }
+    } catch (error) {
+      logger.error('Échec de la synchronisation FlowBlock Sync :', error)
+      if (error instanceof SyncUploadError) return { success: false, message: error.message }
+      return { success: false, message: 'La synchronisation n’a pas abouti. Vérifiez votre connexion puis réessayez.' }
+    }
   })
 }
