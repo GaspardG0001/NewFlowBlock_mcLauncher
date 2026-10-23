@@ -6,6 +6,7 @@ import { ADMINTOOL_URL } from '../const'
 
 export function registerMaintenanceHandlers() {
   ipcMain.handle('maintenance:get', async (_event, account?: Account) => {
+    if (!account) return null
     const maintenance = new Maintenance(ADMINTOOL_URL, account)
 
     try {

@@ -12,12 +12,14 @@
     "build": "tsc && vite build && electron-builder",
     "release:win": "npm run build && electron-builder --win && npx winapp cert generate && npx winapp pack .\\release\\win-unpacked --output .\\release-msix --cert .\\devcert.pfx --manifest .\\Package.appxmanifest",
     "release:mac": "npm run build && electron-builder --mac",
-    "release:lin": "npm run build && electron-builder --linux"
+    "release:lin": "npm run build && electron-builder --linux",
+    "test:sync": "node --test tests/*.test.mjs",
+    "check:electron": "tsc --ignoreConfig --noEmit --target ES2022 --module ESNext --moduleResolution bundler --skipLibCheck --strict --allowSyntheticDefaultImports electron/main.ts electron/preload.ts"
   },
   "build": {
     "appId": "com.mcflowblock.launcher",
     "productName": "FlowBlock_mc Launcher",
-    "copyright": "Copyright © 2026 FlowBlock_mc",
+    "copyright": "Copyright \u00a9 2026 FlowBlock_mc",
     "directories": {
       "output": "release",
       "buildResources": "build"

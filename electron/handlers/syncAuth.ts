@@ -195,7 +195,10 @@ async function authenticate(account: Account, refreshAccount: () => Promise<Acco
     }
 
     const body = await readJsonResponse(response)
-    if (!response.ok) throw getHandshakeError(response.status)
+    if (!response.ok) {
+      if (isRecord(body) && body.code === 'SYNC_DISABLED') throw new Error('SYNC_DISABLED')
+      throw getHandshakeError(response.status)
+    }
 
     const result = validateHandshakeResponse(body, deviceId)
     syncToken = result.token

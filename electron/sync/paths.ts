@@ -4,9 +4,20 @@ export type SyncRule = { path: string; action: string; enabled?: boolean }
 export function normalizeSyncPath(input: unknown): string {
   if (typeof input !== 'string' || !input || input.length > 1024) throw new Error('Invalid relative path')
   const normalized = input.replace(/\\/g, '/')
-  if (normalized.split('/').some((part) => !part || part === '.' || part === '..' ||
-    /[<>:"|\u0000-\u001f\u007f]/.test(part) || /[. ]$/.test(part) ||
-    /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part))) throw new Error('Invalid relative path')
+  if (
+    normalized
+      .split('/')
+      .some(
+        (part) =>
+          !part ||
+          part === '.' ||
+          part === '..' ||
+          /[<>:"|\u0000-\u001f\u007f]/.test(part) ||
+          /[. ]$/.test(part) ||
+          /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i.test(part)
+      )
+  )
+    throw new Error('Invalid relative path')
   return normalized
 }
 
@@ -16,8 +27,13 @@ export function globToRegExp(input: string): RegExp {
   for (let i = 0; i < glob.length; i++) {
     const c = glob[i]
     if (c === '*' && glob[i + 1] === '*') {
-      if (glob[i + 2] === '/') { expression += '(?:.*/)?'; i += 2 }
-      else { expression += '.*'; i++ }
+      if (glob[i + 2] === '/') {
+        expression += '(?:.*/)?'
+        i += 2
+      } else {
+        expression += '.*'
+        i++
+      }
     } else if (c === '*') expression += '[^/]*'
     else if (c === '?') expression += '[^/]'
     else expression += c.replace(/[|\\{}()[\]^$+?.]/g, '\\$&')
@@ -27,8 +43,10 @@ export function globToRegExp(input: string): RegExp {
 
 export function isSyncPathAllowed(path: string, rules: SyncRule[]): boolean {
   const active = rules.filter((rule) => rule.enabled !== false)
-  return active.some((rule) => rule.action === 'INCLUDE' && globToRegExp(rule.path).test(path)) &&
+  return (
+    active.some((rule) => rule.action === 'INCLUDE' && globToRegExp(rule.path).test(path)) &&
     !active.some((rule) => rule.action === 'EXCLUDE' && globToRegExp(rule.path).test(path))
+  )
 }
 
 export function validateFilePath(input: unknown): string {

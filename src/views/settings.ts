@@ -1,3 +1,4 @@
+import type { ISyncUploadResult } from '../../electron/handlers/sync'
 import { setView, closeOverlay, getUser } from '../state'
 import { auth, settings, system, skin, sync, profiles as profilesApi } from '../ipc'
 import { Dialog } from './dialog'
@@ -61,6 +62,18 @@ function initUIListeners() {
   const syncUploadBtn = document.getElementById('btn-sync-upload') as HTMLButtonElement | null
 
   sync.onUploadProgress(renderSyncUploadProgress)
+  sync.onCompleted((result) => {
+    void displaySyncResult(result)
+  })
+  document.getElementById('btn-sync-disable')?.addEventListener('click', async () => {
+    const result = await sync.setEnabled(false)
+    if (!result.success) {
+      await showSyncError({ ...result, canRetry: true }, () => {})
+      return
+    }
+    syncEnabled = false
+    applySyncCardState()
+  })
 
   syncUploadBtn?.addEventListener('click', async () => {
     if (syncUploadBtn.disabled) return
@@ -86,8 +99,9 @@ function initUIListeners() {
         await Dialog.show(result.message, [{ text: 'D’accord', type: 'ok' }], 'FlowBlock Sync')
         return
       }
+      await displaySyncResult(result, profileSlug, profileId)
       if (status) {
-        status.textContent = `${result.syncedFiles} fichier${result.syncedFiles === 1 ? '' : 's'} synchronisé${result.syncedFiles === 1 ? '' : 's'}.`
+        status.textContent = `${result.conflicts.length ? result.conflicts.length + ' conflit(s) à résoudre. ' : ''}${result.syncedFiles} fichier${result.syncedFiles === 1 ? '' : 's'} synchronisé${result.syncedFiles === 1 ? '' : 's'}.`
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : 'La synchronisation n’a pas abouti. Réessayez plus tard.'
@@ -424,14 +438,17 @@ function renderSyncUploadProgress(progress: {
   }
 
   const percentage = progress.fileSize > 0 ? Math.min(100, Math.floor((progress.bytesSent / progress.fileSize) * 100)) : 0
-  status.textContent = `Envoi ${progress.completedFiles + 1}/${progress.totalFiles} — ${progress.currentPath} (${percentage} %)`
+  status.textContent = `Synchronisation ${progress.completedFiles + 1}/${progress.totalFiles} — ${progress.currentPath} (${percentage} %)`
 }
 
 async function renderSyncFilesList(profileSlug: string) {
   const filesListEl = document.getElementById('sync-files-list')
   if (!filesListEl) return
 
-  const [entries, selection] = await Promise.all([sync.listInstanceEntries(profileSlug), sync.getSelection(profileSlug)])
+  const [entries, selection] = await Promise.all([
+    sync.listInstanceEntries(profileSlug, syncProfileIds.get(profileSlug)),
+    sync.getSelection(profileSlug)
+  ])
 
   filesListEl.innerHTML = ''
 
@@ -556,4 +573,54 @@ async function addSkin() {
 
 function getAvailableResolutions(systemResolution: { width: number; height: number }) {
   return resolutionList.filter((res) => res.width <= systemResolution.width && res.height <= systemResolution.height)
+}
+
+async function displaySyncResult(result: ISyncUploadResult, profileSlug?: string, profileId?: string) {
+  const container = document.getElementById('sync-conflicts')
+  if (!container) return
+  container.replaceChildren()
+  if (!result.success) {
+    const message = document.createElement('p')
+    message.textContent = result.message
+    container.appendChild(message)
+    return
+  }
+  for (const conflict of result.conflicts) {
+    const row = document.createElement('div')
+    const label = document.createElement('p')
+    label.textContent = `${conflict.path} : versions différentes sur cet appareil et dans le cloud.`
+    row.appendChild(label)
+    for (const choice of ['local', 'remote'] as const) {
+      const button = document.createElement('button')
+      button.className = 'btn btn-secondary'
+      button.textContent = choice === 'local' ? 'Conserver la version locale' : 'Conserver la version distante'
+      button.disabled = !profileSlug || !profileId
+      button.onclick = async () => {
+        const warning =
+          choice === 'local'
+            ? 'La version locale remplacera la version distante pour ce fichier.'
+            : 'La version distante sera appliquée. Une copie du fichier local sera conservée dans les sauvegardes de conflits du launcher.'
+        if (
+          !(await Dialog.show(
+            `${conflict.path}\n\n${warning}`,
+            [
+              { text: 'Annuler', type: 'cancel' },
+              { text: 'Confirmer', type: 'ok' }
+            ],
+            'Résoudre le conflit'
+          ))
+        )
+          return
+        button.disabled = true
+        try {
+          const next = await sync.resolveConflict(profileSlug!, profileId!, conflict, choice)
+          await displaySyncResult(next, profileSlug, profileId)
+        } finally {
+          button.disabled = false
+        }
+      }
+      row.appendChild(button)
+    }
+    container.appendChild(row)
+  }
 }

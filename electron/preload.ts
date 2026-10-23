@@ -1,3 +1,4 @@
+import type { SyncConflict } from './sync/engine'
 import { contextBridge, ipcRenderer } from 'electron'
 import type { IGameSettings, ISystemInfo } from './handlers/settings'
 import type { IAuthResponse } from './handlers/auth'
@@ -124,12 +125,20 @@ contextBridge.exposeInMainWorld('api', {
     getState: (): Promise<boolean> => ipcRenderer.invoke('sync:get_state'),
     authenticate: (): Promise<ISyncAuthResult> => ipcRenderer.invoke('sync:authenticate'),
     setEnabled: (enabled: boolean): Promise<ISyncAuthResult> => ipcRenderer.invoke('sync:set_enabled', enabled),
-    listInstanceEntries: (profileSlug: string): Promise<ISyncEntry[]> => ipcRenderer.invoke('sync:list_instance_entries', profileSlug),
+    listInstanceEntries: (profileSlug: string, profileId?: string): Promise<ISyncEntry[]> =>
+      ipcRenderer.invoke('sync:list_instance_entries', profileSlug, profileId),
     getSelection: (profileSlug: string): Promise<string[]> => ipcRenderer.invoke('sync:get_selection', profileSlug),
     setSelection: (profileSlug: string, selection: string[]): Promise<boolean> =>
       ipcRenderer.invoke('sync:set_selection', { profileSlug, selection }),
     uploadSelected: (profileSlug: string, profileId: string): Promise<ISyncUploadResult> =>
       ipcRenderer.invoke('sync:upload_selected', { profileSlug, profileId }),
+    resolveConflict: (profileSlug: string, profileId: string, conflict: SyncConflict, choice: 'local' | 'remote'): Promise<ISyncUploadResult> =>
+      ipcRenderer.invoke('sync:resolve_conflict', { profileSlug, profileId, resolve: { ...conflict, choice } }),
+    onCompleted: (callback: (result: ISyncUploadResult) => void): (() => void) => {
+      const listener = (_event: Electron.IpcRendererEvent, result: ISyncUploadResult) => callback(result)
+      ipcRenderer.on('sync:completed', listener)
+      return () => ipcRenderer.removeListener('sync:completed', listener)
+    },
     onUploadProgress: (callback: (progress: ISyncUploadProgress) => void): (() => void) => {
       const listener = (_event: Electron.IpcRendererEvent, progress: ISyncUploadProgress) => callback(progress)
       ipcRenderer.on('sync:upload_progress', listener)

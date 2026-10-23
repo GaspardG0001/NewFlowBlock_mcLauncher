@@ -5,10 +5,28 @@ import { atomicJson, currentHash, downloadFile, hashFile, isMissing, safeFile, s
 import { isSyncPathAllowed, validateFilePath, type SyncRule } from './paths'
 import { planSync, type SyncFileState } from './plan'
 
-export interface SyncConflict { path: string; localHash: string | null; remoteVersion: number | null; remoteDeleted: boolean }
-interface Manifest { revision: string | null; files: Record<string, SyncFileState> }
-interface LocalState { format: 1; rulesKey?: string; base: Record<string, SyncFileState>; remote: Manifest; conflicts: SyncConflict[] }
-export interface SyncResult { success: true; syncedFiles: number; conflicts: SyncConflict[] }
+export interface SyncConflict {
+  path: string
+  localHash: string | null
+  remoteVersion: number | null
+  remoteDeleted: boolean
+}
+interface Manifest {
+  revision: string | null
+  files: Record<string, SyncFileState>
+}
+interface LocalState {
+  format: 1
+  rulesKey?: string
+  base: Record<string, SyncFileState>
+  remote: Manifest
+  conflicts: SyncConflict[]
+}
+export interface SyncResult {
+  success: true
+  syncedFiles: number
+  conflicts: SyncConflict[]
+}
 export interface SyncOptions {
   root: string
   stateFile: string
@@ -31,23 +49,34 @@ function revision(input: unknown): string {
 }
 function fileState(input: unknown): SyncFileState {
   const file = record(input)
-  if (!Number.isSafeInteger(file.version) || (file.version as number) < 1 || typeof file.deleted !== 'boolean') throw new Error('Manifest Sync invalide.')
+  if (!Number.isSafeInteger(file.version) || (file.version as number) < 1 || typeof file.deleted !== 'boolean')
+    throw new Error('Manifest Sync invalide.')
   if (file.deleted) return { version: file.version as number, deleted: true, hash: null, size: '0' }
-  if (typeof file.hash !== 'string' || !/^sha256:[a-f0-9]{64}$/.test(file.hash) || typeof file.size !== 'string' || !/^\d+$/.test(file.size)) throw new Error('Manifest Sync invalide.')
+  if (typeof file.hash !== 'string' || !/^sha256:[a-f0-9]{64}$/.test(file.hash) || typeof file.size !== 'string' || !/^\d+$/.test(file.size))
+    throw new Error('Manifest Sync invalide.')
   return { version: file.version as number, deleted: false, hash: file.hash, size: file.size }
 }
 function parseFiles(input: unknown): Record<string, SyncFileState> {
-  return Object.fromEntries(Object.entries(record(input)).map(([file, value]) => [validateFilePath(file), fileState(value)]))
+  return Object.assign(
+    Object.create(null),
+    Object.fromEntries(Object.entries(record(input)).map(([file, value]) => [validateFilePath(file), fileState(value)]))
+  )
 }
 async function loadState(file: string): Promise<LocalState> {
   try {
     const stored = record(JSON.parse(await fs.readFile(file, 'utf8')))
     if (stored.format !== 1) throw new Error('Version du manifest local inconnue.')
     const remote = record(stored.remote)
-    return { format: 1, rulesKey: typeof stored.rulesKey === 'string' ? stored.rulesKey : undefined, base: parseFiles(stored.base), remote: { revision: remote.revision === null ? null : revision(remote.revision), files: parseFiles(remote.files) }, conflicts: [] }
+    return {
+      format: 1,
+      rulesKey: typeof stored.rulesKey === 'string' ? stored.rulesKey : undefined,
+      base: parseFiles(stored.base),
+      remote: { revision: remote.revision === null ? null : revision(remote.revision), files: parseFiles(remote.files) },
+      conflicts: []
+    }
   } catch (error) {
     if (!isMissing(error)) throw new Error('Le manifest local est illisible. Les fichiers sont conservés ; restaurez le manifest avant de réessayer.')
-    return { format: 1, base: {}, remote: { revision: null, files: {} }, conflicts: [] }
+    return { format: 1, base: Object.create(null), remote: { revision: null, files: Object.create(null) }, conflicts: [] }
   }
 }
 async function remoteManifest(options: SyncOptions, state: LocalState): Promise<Manifest> {
@@ -68,7 +97,8 @@ async function remoteManifest(options: SyncOptions, state: LocalState): Promise<
         if (knownRevision && knownRevision !== currentRevision) throw new Error('MANIFEST_CHANGED')
         knownRevision = currentRevision
         Object.assign(files, parseFiles(response.files))
-        if (response.nextCursor !== null && response.nextCursor !== undefined && typeof response.nextCursor !== 'string') throw new Error('Curseur Sync invalide.')
+        if (response.nextCursor !== null && response.nextCursor !== undefined && typeof response.nextCursor !== 'string')
+          throw new Error('Curseur Sync invalide.')
         cursor = response.nextCursor as string | null
         if (cursor && seen.has(cursor)) throw new Error('Curseur Sync répété.')
         if (cursor) seen.add(cursor)
@@ -99,30 +129,57 @@ export async function runSync(options: SyncOptions): Promise<SyncResult> {
   if (state.rulesKey !== rulesKey) state.remote.revision = null
   state.rulesKey = rulesKey
   const remote = await remoteManifest(options, state)
+  let rootMissing = false
+  try {
+    await fs.lstat(options.root)
+  } catch (error) {
+    if (isMissing(error)) rootMissing = true
+    else throw error
+  }
   const local = await scanFiles(options.root, options.selections, allowed)
   const paths = [...new Set([...Object.keys(remote.files), ...Object.keys(state.base), ...local.keys()])].filter(allowed).sort()
   // Windows and default macOS volumes cannot represent case aliases safely.
   if (process.platform !== 'linux') {
-    const names = new Set<string>()
+    const names = new Map<string, string>()
     for (const file of paths) {
-      const name = file.toLowerCase()
-      if (names.has(name)) throw new Error('Deux chemins distants ne diffèrent que par la casse. Corrigez ce conflit depuis un appareil compatible.')
-      names.add(name)
+      const parts = file.split('/')
+      for (let i = 1; i <= parts.length; i++) {
+        const actual = parts.slice(0, i).join('/')
+        const key = actual.toLowerCase()
+        if (names.has(key) && names.get(key) !== actual)
+          throw new Error('Deux chemins distants ne diffèrent que par la casse. Corrigez ce conflit depuis un appareil compatible.')
+        names.set(key, actual)
+      }
     }
   }
   let completedFiles = 0
   let syncedFiles = 0
   const conflicts: SyncConflict[] = []
-  const save = async () => { state.conflicts = conflicts; await atomicJson(options.stateFile, state) }
+  const save = async () => {
+    state.conflicts = conflicts
+    await atomicJson(options.stateFile, state)
+  }
   state.remote = remote
   for (const file of paths) {
     const localHash = local.get(file) ?? null
     const remoteFile = remote.files[file]
     let action = planSync(localHash, state.base[file], remoteFile)
+    // A missing installation must restore its cloud data, never erase every world.
+    if (rootMissing && remoteFile && !remoteFile.deleted && localHash === null) action = 'download'
     const resolution = options.resolve?.path === file ? options.resolve : undefined
     if (resolution) {
-      if (resolution.localHash !== localHash || resolution.remoteVersion !== (remoteFile?.version ?? null)) throw new Error('Le conflit a changé. Actualisez la synchronisation avant de choisir une version.')
-      action = resolution.choice === 'local' ? (localHash ? 'upload' : remoteFile && !remoteFile.deleted ? 'deleteRemote' : 'unchanged') : (remoteFile && !remoteFile.deleted ? 'download' : 'deleteLocal')
+      if (resolution.localHash !== localHash || resolution.remoteVersion !== (remoteFile?.version ?? null))
+        throw new Error('Le conflit a changé. Actualisez la synchronisation avant de choisir une version.')
+      action =
+        resolution.choice === 'local'
+          ? localHash
+            ? 'upload'
+            : remoteFile && !remoteFile.deleted
+              ? 'deleteRemote'
+              : 'unchanged'
+          : remoteFile && !remoteFile.deleted
+            ? 'download'
+            : 'deleteLocal'
     }
     options.progress?.({ completedFiles, totalFiles: paths.length, currentPath: file, bytesSent: 0, fileSize: 0 })
     if (action === 'conflict') {
@@ -139,10 +196,11 @@ export async function runSync(options: SyncOptions): Promise<SyncResult> {
         if (action === 'download') {
           const response = record(await options.request('download', { path: file }))
           const actual = fileState({ ...response, deleted: false })
-          if (actual.version !== remoteFile?.version || actual.hash !== remoteFile.hash || actual.size !== remoteFile.size) throw new Error('Le fichier distant a changé. Relancez la synchronisation.')
+          if (actual.version !== remoteFile?.version || actual.hash !== remoteFile.hash || actual.size !== remoteFile.size)
+            throw new Error('Le fichier distant a changé. Relancez la synchronisation.')
           temp = await downloadFile(signedUrl(response.downloadUrl), absolute, actual.hash!, actual.size)
         }
-        if (await currentHash(options.root, file) !== localHash) throw new Error('Un fichier local a changé. Relancez la synchronisation.')
+        if ((await currentHash(options.root, file)) !== localHash) throw new Error('Un fichier local a changé. Relancez la synchronisation.')
         await safeFile(options.root, file)
         if (resolution?.choice === 'remote' && localHash) {
           const backup = path.join(path.dirname(options.stateFile), 'conflict-backups', randomUUID(), ...file.split('/'))
@@ -154,10 +212,14 @@ export async function runSync(options: SyncOptions): Promise<SyncResult> {
         if (remoteFile) state.base[file] = remoteFile
         else delete state.base[file]
         syncedFiles++
-      } finally { if (temp) await fs.rm(temp, { force: true }) }
+      } finally {
+        if (temp) await fs.rm(temp, { force: true })
+      }
     } else if (options.mode === 'sync') {
       if (action === 'deleteRemote') {
-        const result = record(await options.request('file', { path: file, baseVersion: remoteFile?.version ?? null, deviceId: options.deviceId }, 'DELETE'))
+        const result = record(
+          await options.request('file', { path: file, baseVersion: remoteFile?.version ?? null, deviceId: options.deviceId }, 'DELETE')
+        )
         const committed = fileState({ ...record(result.file), size: '0', hash: null, deleted: true })
         state.base[file] = committed
       } else {
@@ -168,19 +230,32 @@ export async function runSync(options: SyncOptions): Promise<SyncResult> {
           await fs.copyFile(source, staging)
           const snapshot = await hashFile(staging)
           if (snapshot.hash !== localHash) throw new Error('Un fichier a changé pendant la préparation. Réessayez.')
-          const prepared = record(await options.request('upload/prepare', { path: file, hash: snapshot.hash, size: String(snapshot.size), baseVersion: remoteFile?.version ?? null, deviceId: options.deviceId }))
+          const prepared = record(
+            await options.request('upload/prepare', {
+              path: file,
+              hash: snapshot.hash,
+              size: String(snapshot.size),
+              baseVersion: remoteFile?.version ?? null,
+              deviceId: options.deviceId
+            })
+          )
           if (typeof prepared.uploadId !== 'string' || typeof prepared.uploadRequired !== 'boolean') throw new Error('Session d’upload invalide.')
           if (prepared.uploadRequired) {
             const headers = record(prepared.uploadHeaders)
             const checksum = Buffer.from(snapshot.hash.slice(7), 'hex').toString('base64')
             if (headers['x-amz-checksum-sha256'] !== checksum) throw new Error('Checksum d’upload invalide.')
-            await options.upload(signedUrl(prepared.uploadUrl), staging, snapshot.size, { 'x-amz-checksum-sha256': checksum }, (bytesSent) => options.progress?.({ completedFiles, totalFiles: paths.length, currentPath: file, bytesSent, fileSize: snapshot.size }))
+            await options.upload(signedUrl(prepared.uploadUrl), staging, snapshot.size, { 'x-amz-checksum-sha256': checksum }, (bytesSent) =>
+              options.progress?.({ completedFiles, totalFiles: paths.length, currentPath: file, bytesSent, fileSize: snapshot.size })
+            )
           }
           const result = record(await options.request(`upload/${encodeURIComponent(prepared.uploadId)}/commit`, {}))
           const committed = record(result.file)
-          if (result.success !== true || committed.path !== file || committed.hash !== snapshot.hash) throw new Error('Confirmation d’upload invalide.')
+          if (result.success !== true || committed.path !== file || committed.hash !== snapshot.hash)
+            throw new Error('Confirmation d’upload invalide.')
           state.base[file] = fileState({ ...committed, size: String(snapshot.size), deleted: false })
-        } finally { await fs.rm(staging, { force: true }) }
+        } finally {
+          await fs.rm(staging, { force: true })
+        }
       }
       state.remote.revision = null
       syncedFiles++

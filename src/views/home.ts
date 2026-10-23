@@ -1,8 +1,13 @@
 import { setViewWithTab, getUser } from '../state'
-import { game, news, server, settings, profiles } from '../ipc'
+import { game, news, server, settings, profiles, sync } from '../ipc'
 import { Dialog } from './dialog'
 import logger from 'electron-log/renderer'
 import shared from '../shared'
+
+sync.onCompleted((result) => {
+  if (!result.success) void Dialog.show(result.message, [{ text: 'Fermer', type: 'ok' }], 'FlowBlock Sync')
+  else if (result.conflicts.length) void Dialog.show(`${result.conflicts.length} conflit(s) détecté(s). Vos fichiers locaux sont conservés. Ouvrez les paramètres FlowBlock Sync puis synchronisez pour choisir les versions.`, [{ text: 'Fermer', type: 'ok' }], 'FlowBlock Sync')
+})
 
 const formatDate = (dateString: string) => {
   const date = new Date(dateString)

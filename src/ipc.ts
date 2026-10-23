@@ -1,3 +1,4 @@
+import type { SyncConflict } from '../electron/sync/engine'
 import type { IGameSettings, ISystemInfo } from '../electron/handlers/settings'
 import type { IAuthResponse } from '../electron/handlers/auth'
 import type { RssNewsArticle } from '../electron/handlers/news'
@@ -111,10 +112,12 @@ declare global {
         getState: () => Promise<boolean>
         authenticate: () => Promise<ISyncAuthResult>
         setEnabled: (enabled: boolean) => Promise<ISyncAuthResult>
-        listInstanceEntries: (profileSlug: string) => Promise<ISyncEntry[]>
+        listInstanceEntries: (profileSlug: string, profileId?: string) => Promise<ISyncEntry[]>
         getSelection: (profileSlug: string) => Promise<string[]>
         setSelection: (profileSlug: string, selection: string[]) => Promise<boolean>
         uploadSelected: (profileSlug: string, profileId: string) => Promise<ISyncUploadResult>
+        resolveConflict: (profileSlug: string, profileId: string, conflict: SyncConflict, choice: 'local' | 'remote') => Promise<ISyncUploadResult>
+        onCompleted: (callback: (result: ISyncUploadResult) => void) => () => void
         onUploadProgress: (callback: (progress: ISyncUploadProgress) => void) => () => void
       }
     }
@@ -210,9 +213,12 @@ export const sync = {
   getState: () => window.api.sync.getState(),
   authenticate: () => window.api.sync.authenticate(),
   setEnabled: (enabled: boolean) => window.api.sync.setEnabled(enabled),
-  listInstanceEntries: (profileSlug: string) => window.api.sync.listInstanceEntries(profileSlug),
+  listInstanceEntries: (profileSlug: string, profileId?: string) => window.api.sync.listInstanceEntries(profileSlug, profileId),
   getSelection: (profileSlug: string) => window.api.sync.getSelection(profileSlug),
   setSelection: (profileSlug: string, selection: string[]) => window.api.sync.setSelection(profileSlug, selection),
   uploadSelected: (profileSlug: string, profileId: string) => window.api.sync.uploadSelected(profileSlug, profileId),
+  resolveConflict: (profileSlug: string, profileId: string, conflict: SyncConflict, choice: 'local' | 'remote') =>
+    window.api.sync.resolveConflict(profileSlug, profileId, conflict, choice),
+  onCompleted: (callback: (result: ISyncUploadResult) => void) => window.api.sync.onCompleted(callback),
   onUploadProgress: (callback: (progress: ISyncUploadProgress) => void) => window.api.sync.onUploadProgress(callback)
 }

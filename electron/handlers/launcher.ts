@@ -1,175 +1,180 @@
+import type { SyncService } from './sync'
 import { ipcMain, BrowserWindow, app } from 'electron'
 import { Launcher } from 'eml-lib'
-import type { Account, CrashReport, IProfile, Stats } from 'eml-lib'
+import type { Account, CrashReport, Stats } from 'eml-lib'
 import type { IGameSettings } from './settings'
 import logger from 'electron-log/main'
 import { ADMINTOOL_URL, GAME_ROOT } from '../const'
 
-export function registerLauncherHandlers(mainWindow: BrowserWindow, stats: Stats, crashReport: CrashReport) {
+export function registerLauncherHandlers(mainWindow: BrowserWindow, stats: Stats, crashReport: CrashReport, syncService: SyncService) {
   ipcMain.handle('game:launch', async (_event, payload: { account: Account; settings: IGameSettings; profileSlug: string }) => {
     const { account, settings, profileSlug } = payload
-    const java = settings.java === 'system' ? { install: 'manual' as const, absolutePath: 'java' } : { install: 'auto' as const }
-    logger.log('Lancement en cours')
-
-    const launcher = new Launcher({
-      url: ADMINTOOL_URL,
-      root: GAME_ROOT,
-      profile: { slug: profileSlug },
-      account: account,
-      cleaning: {
-        enabled: false
-      },
-      java: java,
-      memory: {
-        min: +settings.memory.min * 1024,
-        max: +settings.memory.max * 1024
-      },
-      window: {
-        width: settings.resolution.width,
-        height: settings.resolution.height,
-        fullscreen: settings.resolution.fullscreen
-      }
-    })
-    logger.log(`Dossier du jeu : ${launcher.config.root}`)
-    logger.log(`Installation MSIX : ${Boolean(process.windowsStore)}`)
-    stats.attach(launcher)
-
-    launcher.on('launch_compute_download', () => {
-      logger.log('Calcul du téléchargement...')
-      mainWindow.webContents.send('game:launch_compute_download')
-    })
-
-    launcher.on('launch_download', (download) => {
-      logger.log(`Téléchargement de ${download.total.amount} fichiers (${download.total.size} o).`)
-      mainWindow.webContents.send('game:launch_download', download)
-    })
-    launcher.on('download_progress', (progress) => {
-      mainWindow.webContents.send('game:download_progress', progress)
-    })
-    launcher.on('download_error', (error) => {
-      logger.error(`Erreur lors du téléchargement de ${error.filename} : ${error.message}`)
-      mainWindow.webContents.send('game:download_error', error)
-    })
-    launcher.on('download_end', (info) => {
-      logger.log(`${info.downloaded.amount} fichiers téléchargés.`)
-      mainWindow.webContents.send('game:download_end', info)
-    })
-
-    launcher.on('launch_install_loader', (loader) => {
-      logger.log(`Installation du loader ${loader.type} ${loader.loaderVersion}...`)
-      mainWindow.webContents.send('game:launch_install_loader', loader)
-    })
-
-    launcher.on('launch_extract_natives', () => {
-      logger.log('Extraction des natives...')
-      mainWindow.webContents.send('game:launch_extract_natives')
-    })
-    launcher.on('extract_progress', (progress) => {
-      logger.log(`Fichier extrait : ${progress.filename}.`)
-      mainWindow.webContents.send('game:extract_progress', progress)
-    })
-    launcher.on('extract_end', (info) => {
-      logger.log(`${info.amount} fichiers extraits.`)
-      mainWindow.webContents.send('game:extract_end', info)
-    })
-
-    launcher.on('launch_copy_assets', () => {
-      logger.log('Copie des ressources...')
-      mainWindow.webContents.send('game:launch_copy_assets')
-    })
-    launcher.on('copy_progress', (progress) => {
-      logger.log(`Copie de ${progress.filename} vers ${progress.dest}.`)
-      mainWindow.webContents.send('game:copy_progress', progress)
-    })
-    launcher.on('copy_end', (info) => {
-      logger.log(`${info.amount} fichiers copiés.`)
-      mainWindow.webContents.send('game:copy_end', info)
-    })
-
-    launcher.on('launch_patch_loader', () => {
-      logger.log('Application des correctifs du loader...')
-      mainWindow.webContents.send('game:launch_patch_loader')
-    })
-    launcher.on('patch_progress', (progress) => {
-      mainWindow.webContents.send('game:patch_progress', progress)
-    })
-    launcher.on('patch_error', (error) => {
-      logger.error(`Erreur lors de l'application du correctif sur ${error.filename} : ${error.message}`)
-      mainWindow.webContents.send('game:patch_error', error)
-    })
-    launcher.on('patch_end', (info) => {
-      logger.log(`${info.amount} fichiers corrigés.`)
-      mainWindow.webContents.send('game:patch_end', info)
-    })
-
-    launcher.on('launch_check_java', () => {
-      logger.log('Vérification de Java...')
-      mainWindow.webContents.send('game:launch_check_java')
-    })
-    launcher.on('java_info', (info) => {
-      logger.log(`Utilisation de Java ${info.version} ${info.arch}`)
-      mainWindow.webContents.send('game:java_info', info)
-    })
-
-    launcher.on('launch_clean', () => {
-      logger.log('Nettoyage du dossier du jeu...')
-      mainWindow.webContents.send('game:launch_clean')
-    })
-    launcher.on('clean_progress', (progress) => {
-      mainWindow.webContents.send('game:clean_progress', progress)
-    })
-    launcher.on('clean_end', (info) => {
-      logger.log(`${info.amount} fichiers nettoyés.`)
-      mainWindow.webContents.send('game:clean_end', info)
-    })
-
-    launcher.on('launch_launch', (info) => {
-      logger.log(`Lancement de Minecraft ${info.version} (${info.type}${info.loaderVersion ? ` ${info.loaderVersion}` : ''})...`)
-      mainWindow.webContents.send('game:launch_launch', info)
-      if (settings.launcherAction === 'close' && !settings.sendCrashReports) {
-        setTimeout(() => app.quit(), 5000)
-      } else if (settings.launcherAction === 'hide' || settings.sendCrashReports) {
-        setTimeout(() => mainWindow.minimize(), 5000)
-      }
-      mainWindow.webContents.send('game:launched')
-    })
-    launcher.on('launch_data', (message) => {
-      logger.log(message)
-      mainWindow.webContents.send('game:launch_data', message)
-    })
-    launcher.on('launch_close', (code) => {
-      logger.log(`Fermé avec le code ${code}.`)
-      mainWindow.webContents.send('game:launch_close', code)
-    })
-    launcher.on('launch_crash', async (crashData) => {
-      logger.error(`Minecraft a planté avec le code ${crashData.code}.`)
-
-      if (!settings.sendCrashReports) {
-        logger.log("Rapport de crash non envoyé : l'utilisateur n'a pas donné son consentement.")
-        return
-      }
-
-      try {
-        await crashReport.send(launcher, crashData)
-        logger.log('Rapport de crash envoyé avec succès.')
-      } catch (err) {
-        logger.error("Échec de l'envoi du rapport de crash :", err)
-      }
-    })
-
-    launcher.on('launch_debug', (message) => {
-      mainWindow.webContents.send('game:launch_debug', message)
-    })
-    launcher.on('patch_debug', (message) => {
-      mainWindow.webContents.send('game:patch_debug', message)
-    })
-
+    await syncService.beforeGame(profileSlug, mainWindow.webContents, account.uuid)
     try {
+      const java = settings.java === 'system' ? { install: 'manual' as const, absolutePath: 'java' } : { install: 'auto' as const }
+      logger.log('Lancement en cours')
+
+      const launcher = new Launcher({
+        url: ADMINTOOL_URL,
+        root: GAME_ROOT,
+        profile: { slug: profileSlug },
+        account: account,
+        cleaning: {
+          enabled: false
+        },
+        java: java,
+        memory: {
+          min: +settings.memory.min * 1024,
+          max: +settings.memory.max * 1024
+        },
+        window: {
+          width: settings.resolution.width,
+          height: settings.resolution.height,
+          fullscreen: settings.resolution.fullscreen
+        }
+      })
+      logger.log(`Dossier du jeu : ${launcher.config.root}`)
+      logger.log(`Installation MSIX : ${Boolean(process.windowsStore)}`)
+      stats.attach(launcher)
+
+      launcher.on('launch_compute_download', () => {
+        logger.log('Calcul du téléchargement...')
+        mainWindow.webContents.send('game:launch_compute_download')
+      })
+
+      launcher.on('launch_download', (download) => {
+        logger.log(`Téléchargement de ${download.total.amount} fichiers (${download.total.size} o).`)
+        mainWindow.webContents.send('game:launch_download', download)
+      })
+      launcher.on('download_progress', (progress) => {
+        mainWindow.webContents.send('game:download_progress', progress)
+      })
+      launcher.on('download_error', (error) => {
+        logger.error(`Erreur lors du téléchargement de ${error.filename} : ${error.message}`)
+        mainWindow.webContents.send('game:download_error', error)
+      })
+      launcher.on('download_end', (info) => {
+        logger.log(`${info.downloaded.amount} fichiers téléchargés.`)
+        mainWindow.webContents.send('game:download_end', info)
+      })
+
+      launcher.on('launch_install_loader', (loader) => {
+        logger.log(`Installation du loader ${loader.type} ${loader.loaderVersion}...`)
+        mainWindow.webContents.send('game:launch_install_loader', loader)
+      })
+
+      launcher.on('launch_extract_natives', () => {
+        logger.log('Extraction des natives...')
+        mainWindow.webContents.send('game:launch_extract_natives')
+      })
+      launcher.on('extract_progress', (progress) => {
+        logger.log(`Fichier extrait : ${progress.filename}.`)
+        mainWindow.webContents.send('game:extract_progress', progress)
+      })
+      launcher.on('extract_end', (info) => {
+        logger.log(`${info.amount} fichiers extraits.`)
+        mainWindow.webContents.send('game:extract_end', info)
+      })
+
+      launcher.on('launch_copy_assets', () => {
+        logger.log('Copie des ressources...')
+        mainWindow.webContents.send('game:launch_copy_assets')
+      })
+      launcher.on('copy_progress', (progress) => {
+        logger.log(`Copie de ${progress.filename} vers ${progress.dest}.`)
+        mainWindow.webContents.send('game:copy_progress', progress)
+      })
+      launcher.on('copy_end', (info) => {
+        logger.log(`${info.amount} fichiers copiés.`)
+        mainWindow.webContents.send('game:copy_end', info)
+      })
+
+      launcher.on('launch_patch_loader', () => {
+        logger.log('Application des correctifs du loader...')
+        mainWindow.webContents.send('game:launch_patch_loader')
+      })
+      launcher.on('patch_progress', (progress) => {
+        mainWindow.webContents.send('game:patch_progress', progress)
+      })
+      launcher.on('patch_error', (error) => {
+        logger.error(`Erreur lors de l'application du correctif sur ${error.filename} : ${error.message}`)
+        mainWindow.webContents.send('game:patch_error', error)
+      })
+      launcher.on('patch_end', (info) => {
+        logger.log(`${info.amount} fichiers corrigés.`)
+        mainWindow.webContents.send('game:patch_end', info)
+      })
+
+      launcher.on('launch_check_java', () => {
+        logger.log('Vérification de Java...')
+        mainWindow.webContents.send('game:launch_check_java')
+      })
+      launcher.on('java_info', (info) => {
+        logger.log(`Utilisation de Java ${info.version} ${info.arch}`)
+        mainWindow.webContents.send('game:java_info', info)
+      })
+
+      launcher.on('launch_clean', () => {
+        logger.log('Nettoyage du dossier du jeu...')
+        mainWindow.webContents.send('game:launch_clean')
+      })
+      launcher.on('clean_progress', (progress) => {
+        mainWindow.webContents.send('game:clean_progress', progress)
+      })
+      launcher.on('clean_end', (info) => {
+        logger.log(`${info.amount} fichiers nettoyés.`)
+        mainWindow.webContents.send('game:clean_end', info)
+      })
+
+      launcher.on('launch_launch', (info) => {
+        logger.log(`Lancement de Minecraft ${info.minecraft.version}...`)
+        mainWindow.webContents.send('game:launch_launch', info)
+        if (settings.launcherAction === 'close' && !settings.sendCrashReports && !syncService.isEnabled()) {
+          setTimeout(() => app.quit(), 5000)
+        } else if (settings.launcherAction === 'hide' || settings.sendCrashReports || syncService.isEnabled()) {
+          setTimeout(() => mainWindow.minimize(), 5000)
+        }
+        mainWindow.webContents.send('game:launched')
+      })
+      launcher.on('launch_data', (message) => {
+        logger.log(message)
+        mainWindow.webContents.send('game:launch_data', message)
+      })
+      let postGameSync: Promise<void> | undefined
+      launcher.on('launch_close', (code) => {
+        postGameSync = syncService.afterGame(mainWindow.webContents)
+        logger.log(`Fermé avec le code ${code}.`)
+        mainWindow.webContents.send('game:launch_close', code)
+      })
+      launcher.on('launch_crash', async (crashData) => {
+        logger.error(`Minecraft a planté avec le code ${crashData.code}.`)
+
+        if (!settings.sendCrashReports) {
+          logger.log("Rapport de crash non envoyé : l'utilisateur n'a pas donné son consentement.")
+          return
+        }
+
+        try {
+          await crashReport.send(launcher, crashData)
+          logger.log('Rapport de crash envoyé avec succès.')
+        } catch (err) {
+          logger.error("Échec de l'envoi du rapport de crash :", err)
+        }
+      })
+
+      launcher.on('launch_debug', (message) => {
+        mainWindow.webContents.send('game:launch_debug', message)
+      })
+      launcher.on('patch_debug', (message) => {
+        mainWindow.webContents.send('game:patch_debug', message)
+      })
+
       await launcher.launch()
+      await postGameSync
     } catch (err) {
+      syncService.launchFailed()
       logger.error('Launcher error:', err)
       throw err
     }
   })
 }
-

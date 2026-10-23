@@ -1,4 +1,9 @@
-export interface SyncFileState { hash: string | null; size: string; version: number; deleted: boolean }
+export interface SyncFileState {
+  hash: string | null
+  size: string
+  version: number
+  deleted: boolean
+}
 export type SyncAction = 'unchanged' | 'upload' | 'download' | 'deleteLocal' | 'deleteRemote' | 'conflict'
 
 export function planSync(localHash: string | null, base: SyncFileState | undefined, remote: SyncFileState | undefined): SyncAction {

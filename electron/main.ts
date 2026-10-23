@@ -101,7 +101,15 @@ function configureAppMenu() {
     },
     {
       label: 'Edit',
-      submenu: [{ role: 'undo' }, { role: 'redo' }, { type: 'separator' }, { role: 'cut' }, { role: 'copy' }, { role: 'paste' }, { role: 'selectAll' }]
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'selectAll' }
+      ]
     },
     {
       label: 'View',
@@ -132,10 +140,16 @@ app.whenReady().then(async () => {
     registerNewsHandlers()
     registerBackgroundHandlers()
     registerMaintenanceHandlers()
-    registerLauncherHandlers(mainWindow, stats, crashReport)
+    const syncService = registerSyncHandlers(authService)
+    mainWindow.on('close', (event) => {
+      if (syncService.isBusy() && syncService.isEnabled()) {
+        event.preventDefault()
+        mainWindow?.minimize()
+      }
+    })
+    registerLauncherHandlers(mainWindow, stats, crashReport, syncService)
     registerSettingsHandlers()
     registerPermissionsHandlers()
-    registerSyncHandlers(authService)
   }
 })
 
