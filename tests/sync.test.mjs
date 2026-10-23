@@ -7,7 +7,7 @@ import { createHash } from 'node:crypto'
 import { createServer } from 'vite'
 
 const vite = await createServer({ configFile: false, server: { middlewareMode: true, ws: false }, appType: 'custom', logLevel: 'error' })
-const { runSync } = await vite.ssrLoadModule('/electron/sync/engine.ts')
+const { runSync, readSyncConflicts } = await vite.ssrLoadModule('/electron/sync/engine.ts')
 const { planSync } = await vite.ssrLoadModule('/electron/sync/plan.ts')
 after(() => vite.close())
 const hash = (data) => `sha256:${createHash('sha256').update(data).digest('hex')}`
@@ -133,6 +133,7 @@ test('concurrent edits preserve both versions and remote resolution saves a loca
     await h.put(b, 'saves/level.dat', 'local')
     const result = await runSync(b)
     assert.equal(result.conflicts.length, 1)
+    assert.deepEqual(await readSyncConflicts(b.stateFile), result.conflicts)
     assert.equal(await fs.readFile(path.join(b.root, 'saves/level.dat'), 'utf8'), 'local')
     const conflict = result.conflicts[0]
     await runSync({ ...b, resolve: { ...conflict, choice: 'remote' } })
@@ -251,13 +252,16 @@ test('remote changes during pagination cause a manifest retry before any file ch
     assert.equal(calls, 2)
   }))
 
-test('a missing installation restores cloud data instead of deleting all remote worlds', async () => harness(async (h) => {
-  const a = h.device('a')
-  await h.put(a, 'saves/level.dat', 'world'); await runSync(a)
-  await fs.unlink(path.join(a.root, 'saves/level.dat'))
-  await fs.rmdir(path.join(a.root, 'saves')); await fs.rmdir(a.root)
-  await runSync(a)
-  assert.equal(h.remote['saves/level.dat'].deleted, false)
-  assert.equal(h.remote['saves/level.dat'].version, 1)
-  assert.equal(await fs.readFile(path.join(a.root, 'saves/level.dat'), 'utf8'), 'world')
-}))
+test('a missing installation restores cloud data instead of deleting all remote worlds', async () =>
+  harness(async (h) => {
+    const a = h.device('a')
+    await h.put(a, 'saves/level.dat', 'world')
+    await runSync(a)
+    await fs.unlink(path.join(a.root, 'saves/level.dat'))
+    await fs.rmdir(path.join(a.root, 'saves'))
+    await fs.rmdir(a.root)
+    await runSync(a)
+    assert.equal(h.remote['saves/level.dat'].deleted, false)
+    assert.equal(h.remote['saves/level.dat'].version, 1)
+    assert.equal(await fs.readFile(path.join(a.root, 'saves/level.dat'), 'utf8'), 'world')
+  }))

@@ -72,13 +72,33 @@ async function loadState(file: string): Promise<LocalState> {
       rulesKey: typeof stored.rulesKey === 'string' ? stored.rulesKey : undefined,
       base: parseFiles(stored.base),
       remote: { revision: remote.revision === null ? null : revision(remote.revision), files: parseFiles(remote.files) },
-      conflicts: []
+      conflicts: Array.isArray(stored.conflicts)
+        ? stored.conflicts.map((input) => {
+            const conflict = record(input)
+            if (
+              (conflict.localHash !== null && (typeof conflict.localHash !== 'string' || !/^sha256:[a-f0-9]{64}$/.test(conflict.localHash))) ||
+              (conflict.remoteVersion !== null && (!Number.isSafeInteger(conflict.remoteVersion) || (conflict.remoteVersion as number) < 1)) ||
+              typeof conflict.remoteDeleted !== 'boolean'
+            )
+              throw new Error('Conflit local invalide.')
+            return {
+              path: validateFilePath(conflict.path),
+              localHash: conflict.localHash as string | null,
+              remoteVersion: conflict.remoteVersion as number | null,
+              remoteDeleted: conflict.remoteDeleted
+            }
+          })
+        : []
     }
   } catch (error) {
     if (!isMissing(error)) throw new Error('Le manifest local est illisible. Les fichiers sont conservés ; restaurez le manifest avant de réessayer.')
     return { format: 1, base: Object.create(null), remote: { revision: null, files: Object.create(null) }, conflicts: [] }
   }
 }
+export async function readSyncConflicts(file: string): Promise<SyncConflict[]> {
+  return (await loadState(file)).conflicts
+}
+
 async function remoteManifest(options: SyncOptions, state: LocalState): Promise<Manifest> {
   const latest = revision(record(await options.request('revision')).revision)
   if (state.remote.revision === latest) return state.remote

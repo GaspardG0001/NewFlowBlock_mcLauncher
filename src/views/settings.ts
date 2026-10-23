@@ -59,11 +59,11 @@ function initUIListeners() {
 
   const addSkinSubmitBtn = document.getElementById('btn-add-skin-submit') as HTMLButtonElement
   const syncActivateBtn = document.getElementById('btn-sync-activate') as HTMLButtonElement | null
-  const syncUploadBtn = document.getElementById('btn-sync-upload') as HTMLButtonElement | null
 
   sync.onUploadProgress(renderSyncUploadProgress)
   sync.onCompleted((result) => {
-    void displaySyncResult(result)
+    if (!result.success) void displaySyncResult(result)
+    else void refreshSyncConflicts()
   })
   document.getElementById('btn-sync-disable')?.addEventListener('click', async () => {
     const result = await sync.setEnabled(false)
@@ -73,44 +73,6 @@ function initUIListeners() {
     }
     syncEnabled = false
     applySyncCardState()
-  })
-
-  syncUploadBtn?.addEventListener('click', async () => {
-    if (syncUploadBtn.disabled) return
-
-    const profileSelect = document.getElementById('sync-profile-select') as HTMLSelectElement | null
-    const status = document.getElementById('sync-upload-status')
-    const profileSlug = profileSelect?.value
-    const profileId = profileSlug ? syncProfileIds.get(profileSlug) : undefined
-    if (!profileSlug || !profileId) {
-      const message = 'Ce profil n’est plus disponible. Actualisez la liste puis réessayez.'
-      if (status) status.textContent = message
-      await Dialog.show(message, [{ text: 'D’accord', type: 'ok' }], 'FlowBlock Sync')
-      return
-    }
-
-    syncUploadBtn.disabled = true
-    syncUploadBtn.textContent = 'Synchronisation…'
-    if (status) status.textContent = 'Préparation des fichiers…'
-    try {
-      const result = await sync.uploadSelected(profileSlug, profileId)
-      if (!result.success) {
-        if (status) status.textContent = 'La synchronisation a échoué.'
-        await Dialog.show(result.message, [{ text: 'D’accord', type: 'ok' }], 'FlowBlock Sync')
-        return
-      }
-      await displaySyncResult(result, profileSlug, profileId)
-      if (status) {
-        status.textContent = `${result.conflicts.length ? result.conflicts.length + ' conflit(s) à résoudre. ' : ''}${result.syncedFiles} fichier${result.syncedFiles === 1 ? '' : 's'} synchronisé${result.syncedFiles === 1 ? '' : 's'}.`
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'La synchronisation n’a pas abouti. Réessayez plus tard.'
-      if (status) status.textContent = 'La synchronisation a échoué.'
-      await Dialog.show(message, [{ text: 'D’accord', type: 'ok' }], 'FlowBlock Sync')
-    } finally {
-      syncUploadBtn.disabled = false
-      syncUploadBtn.textContent = 'Synchroniser maintenant'
-    }
   })
 
   syncActivateBtn?.addEventListener('click', async () => {
@@ -450,6 +412,7 @@ async function renderSyncFilesList(profileSlug: string) {
     sync.getSelection(profileSlug)
   ])
 
+  await refreshSyncConflicts(profileSlug)
   filesListEl.innerHTML = ''
 
   if (entries.length === 0) {
@@ -573,6 +536,20 @@ async function addSkin() {
 
 function getAvailableResolutions(systemResolution: { width: number; height: number }) {
   return resolutionList.filter((res) => res.width <= systemResolution.width && res.height <= systemResolution.height)
+}
+
+async function refreshSyncConflicts(profileSlug?: string) {
+  const selectedSlug = profileSlug ?? (document.getElementById('sync-profile-select') as HTMLSelectElement | null)?.value
+  const profileId = selectedSlug ? syncProfileIds.get(selectedSlug) : undefined
+  if (!selectedSlug || !profileId) return
+  try {
+    const conflicts = await sync.getConflicts(selectedSlug, profileId)
+    // Profile selection may have changed while the manifest was being read.
+    if ((document.getElementById('sync-profile-select') as HTMLSelectElement | null)?.value !== selectedSlug) return
+    await displaySyncResult({ success: true, syncedFiles: 0, conflicts }, selectedSlug, profileId)
+  } catch (error) {
+    await displaySyncResult({ success: false, message: error instanceof Error ? error.message : 'Les conflits ne peuvent pas être affichés.' })
+  }
 }
 
 async function displaySyncResult(result: ISyncUploadResult, profileSlug?: string, profileId?: string) {

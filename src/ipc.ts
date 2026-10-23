@@ -115,7 +115,7 @@ declare global {
         listInstanceEntries: (profileSlug: string, profileId?: string) => Promise<ISyncEntry[]>
         getSelection: (profileSlug: string) => Promise<string[]>
         setSelection: (profileSlug: string, selection: string[]) => Promise<boolean>
-        uploadSelected: (profileSlug: string, profileId: string) => Promise<ISyncUploadResult>
+        getConflicts: (profileSlug: string, profileId: string) => Promise<SyncConflict[]>
         resolveConflict: (profileSlug: string, profileId: string, conflict: SyncConflict, choice: 'local' | 'remote') => Promise<ISyncUploadResult>
         onCompleted: (callback: (result: ISyncUploadResult) => void) => () => void
         onUploadProgress: (callback: (progress: ISyncUploadProgress) => void) => () => void
@@ -216,7 +216,7 @@ export const sync = {
   listInstanceEntries: (profileSlug: string, profileId?: string) => window.api.sync.listInstanceEntries(profileSlug, profileId),
   getSelection: (profileSlug: string) => window.api.sync.getSelection(profileSlug),
   setSelection: (profileSlug: string, selection: string[]) => window.api.sync.setSelection(profileSlug, selection),
-  uploadSelected: (profileSlug: string, profileId: string) => window.api.sync.uploadSelected(profileSlug, profileId),
+  getConflicts: (profileSlug: string, profileId: string) => window.api.sync.getConflicts(profileSlug, profileId),
   resolveConflict: (profileSlug: string, profileId: string, conflict: SyncConflict, choice: 'local' | 'remote') =>
     window.api.sync.resolveConflict(profileSlug, profileId, conflict, choice),
   onCompleted: (callback: (result: ISyncUploadResult) => void) => window.api.sync.onCompleted(callback),

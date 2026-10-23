@@ -130,8 +130,8 @@ contextBridge.exposeInMainWorld('api', {
     getSelection: (profileSlug: string): Promise<string[]> => ipcRenderer.invoke('sync:get_selection', profileSlug),
     setSelection: (profileSlug: string, selection: string[]): Promise<boolean> =>
       ipcRenderer.invoke('sync:set_selection', { profileSlug, selection }),
-    uploadSelected: (profileSlug: string, profileId: string): Promise<ISyncUploadResult> =>
-      ipcRenderer.invoke('sync:upload_selected', { profileSlug, profileId }),
+    getConflicts: (profileSlug: string, profileId: string): Promise<SyncConflict[]> =>
+      ipcRenderer.invoke('sync:get_conflicts', { profileSlug, profileId }),
     resolveConflict: (profileSlug: string, profileId: string, conflict: SyncConflict, choice: 'local' | 'remote'): Promise<ISyncUploadResult> =>
       ipcRenderer.invoke('sync:resolve_conflict', { profileSlug, profileId, resolve: { ...conflict, choice } }),
     onCompleted: (callback: (result: ISyncUploadResult) => void): (() => void) => {

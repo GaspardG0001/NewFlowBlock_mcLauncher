@@ -11,7 +11,7 @@ import logger from 'electron-log/main'
 import { ADMINTOOL_URL, GAME_ROOT } from '../const'
 import type { IAuthService } from './auth'
 import { clearSyncAuth, ensureSyncAuthenticated, getSyncAuthFailure, getSyncBearerToken, type ISyncAuthResult } from './syncAuth'
-import { runSync, type SyncResult } from '../sync/engine'
+import { readSyncConflicts, runSync, type SyncConflict, type SyncResult } from '../sync/engine'
 import { atomicJson } from '../sync/files'
 import { validateFilePath } from '../sync/paths'
 
@@ -244,6 +244,13 @@ async function requestSync(
   throw new SyncUploadError('Reconnectez-vous puis réessayez.')
 }
 
+function getManifestPath(profileSlug: string, profileId: string, playerUuid: string): string {
+  const key = createHash('sha256')
+    .update(JSON.stringify([new URL(ADMINTOOL_URL).origin, playerUuid, profileId, getInstancePath(profileSlug)]))
+    .digest('hex')
+  return path.join(app.getPath('userData'), 'sync-manifests', key, 'manifest.json')
+}
+
 export interface SyncService {
   isEnabled(): boolean
   beforeGame(profileSlug: string, sender: Electron.WebContents, accountUuid: string): Promise<void>
@@ -273,10 +280,7 @@ export function registerSyncHandlers(authService: IAuthService): SyncService {
       const status = await ensureSyncAuthenticated(authService.getSavedAccountForSync, authService.refreshSavedAccountForSync)
       if (expectedPlayer && status.player.minecraftUuid !== expectedPlayer)
         throw new SyncUploadError('Le compte actif a changé depuis le lancement du jeu. Les données locales sont conservées.')
-      const key = createHash('sha256')
-        .update(JSON.stringify([new URL(ADMINTOOL_URL).origin, status.player.minecraftUuid, profileId, getInstancePath(profileSlug)]))
-        .digest('hex')
-      const stateFile = path.join(app.getPath('userData'), 'sync-manifests', key, 'manifest.json')
+      const stateFile = getManifestPath(profileSlug, profileId, status.player.minecraftUuid)
       return await runSync({
         root: getInstancePath(profileSlug),
         stateFile,
@@ -348,16 +352,16 @@ export function registerSyncHandlers(authService: IAuthService): SyncService {
     await atomicJson(statePath, state)
     return true
   })
-  const manual = async (
+  const resolveConflict = async (
     sender: Electron.WebContents,
     payload: {
       profileSlug: string
       profileId: string
-      resolve?: { path: string; choice: 'local' | 'remote'; localHash: string | null; remoteVersion: number | null }
+      resolve: { path: string; choice: 'local' | 'remote'; localHash: string | null; remoteVersion: number | null }
     }
   ): Promise<ISyncUploadResult> => {
     try {
-      if (payload.resolve && !['local', 'remote'].includes(payload.resolve.choice)) throw new Error('Choix invalide.')
+      if (!payload.resolve || !['local', 'remote'].includes(payload.resolve.choice)) throw new Error('Choix invalide.')
       return await synchronize(payload.profileSlug, payload.profileId, sender, 'sync', payload.resolve)
     } catch (error) {
       // Do not log HTTP errors that might contain temporary URLs or tokens.
@@ -365,8 +369,13 @@ export function registerSyncHandlers(authService: IAuthService): SyncService {
       return { success: false, message: error instanceof Error ? error.message : 'La synchronisation a échoué. Réessayez.' }
     }
   }
-  ipcMain.handle('sync:upload_selected', (event, payload) => manual(event.sender, payload))
-  ipcMain.handle('sync:resolve_conflict', (event, payload) => manual(event.sender, payload))
+  ipcMain.handle('sync:get_conflicts', async (_event, payload: { profileSlug: string; profileId: string }): Promise<SyncConflict[]> => {
+    const { profileSlug, profileId } = validateProfile(payload?.profileSlug, payload?.profileId)
+    if (!readState().enabled) return []
+    const status = await ensureSyncAuthenticated(authService.getSavedAccountForSync, authService.refreshSavedAccountForSync)
+    return readSyncConflicts(getManifestPath(profileSlug, profileId, status.player.minecraftUuid))
+  })
+  ipcMain.handle('sync:resolve_conflict', (event, payload) => resolveConflict(event.sender, payload))
   return {
     isEnabled: () => readState().enabled,
     isBusy: () => activeJob || gameRunning || gameReserved,

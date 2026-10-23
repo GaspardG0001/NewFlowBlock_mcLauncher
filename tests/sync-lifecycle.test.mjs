@@ -60,11 +60,15 @@ after(async () => {
   await fs.rm(temp, { recursive: true, force: true })
 })
 
-test('game reservation blocks manual transfers and preference changes until post-game synchronization finishes', async () => {
+test('game reservation blocks conflict resolution transfers and preference changes until post-game synchronization finishes', async () => {
   await fs.writeFile(path.join(temp, 'sync.json'), JSON.stringify({ enabled: true, selections: {} }))
   await service.beforeGame('profile', sender, uuid)
   assert.equal(service.isBusy(), true)
-  const transfer = await handlers.get('sync:upload_selected')({ sender }, { profileSlug: 'profile', profileId: 'profile-id' })
+  assert.equal(handlers.has('sync:upload_selected'), false)
+  const transfer = await handlers.get('sync:resolve_conflict')(
+    { sender },
+    { profileSlug: 'profile', profileId: 'profile-id', resolve: { path: 'saves/level.dat', choice: 'local', localHash: null, remoteVersion: 1 } }
+  )
   assert.equal(transfer.success, false)
   const preference = await handlers.get('sync:set_enabled')({}, false)
   assert.equal(preference.success, false)
