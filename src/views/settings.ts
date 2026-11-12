@@ -4,6 +4,7 @@ import { auth, settings, system, skin, sync, profiles as profilesApi } from '../
 import { Dialog } from './dialog'
 import type { IGameSettings } from '../../electron/handlers/settings'
 import shared from '../shared'
+import { clearSyncUsage, renderSyncUsage, showSyncUsageError } from './sync-usage'
 
 const resolutionList = [
   { label: 'Automatique (par défaut)', value: '854x480', width: 854, height: 480 },
@@ -22,6 +23,9 @@ let currentSettings: IGameSettings
 let launcherActionBeforeCrashReports: IGameSettings['launcherAction'] = 'close'
 let syncEnabled = false
 let syncProfileIds = new Map<string, string>()
+let syncProfileNames = new Map<string, string>()
+let syncUsageRequest = 0
+let syncTabRequest = 0
 
 export async function initSettings() {
   const sysInfo = await system.getInfo()
@@ -64,6 +68,7 @@ function initUIListeners() {
   sync.onCompleted((result) => {
     if (!result.success) void displaySyncResult(result)
     else void refreshSyncConflicts()
+    if (syncEnabled) void refreshSyncUsage()
   })
   document.getElementById('btn-sync-disable')?.addEventListener('click', async () => {
     const result = await sync.setEnabled(false)
@@ -72,6 +77,9 @@ function initUIListeners() {
       return
     }
     syncEnabled = false
+    syncTabRequest++
+    syncUsageRequest++
+    clearSyncUsage('Stockage indisponible.')
     applySyncCardState()
   })
 
@@ -294,9 +302,11 @@ async function enableSync() {
   const syncActivateBtn = document.getElementById('btn-sync-activate') as HTMLButtonElement | null
   if (!syncActivateBtn || syncActivateBtn.disabled) return
 
+  const request = ++syncTabRequest
   syncActivateBtn.disabled = true
   try {
     const result = await sync.setEnabled(true)
+    if (request !== syncTabRequest) return
     if (!result.success) {
       syncActivateBtn.disabled = false
       setSyncTabAvailable(false)
@@ -307,17 +317,23 @@ async function enableSync() {
     syncEnabled = true
     setSyncTabAvailable(true)
     applySyncCardState()
-    await renderSyncFileSelection()
+    await renderSyncFileSelection(request)
   } finally {
     if (!syncEnabled) syncActivateBtn.disabled = false
   }
 }
 
 async function refreshSyncTab() {
+  const request = ++syncTabRequest
+  syncUsageRequest++
+  syncProfileIds = new Map()
+  syncProfileNames = new Map()
+  clearSyncUsage('Chargement du stockage…')
   const syncSelection = document.getElementById('sync-selection') as HTMLDivElement | null
   if (syncSelection) syncSelection.style.display = 'none'
 
   const result = await sync.authenticate()
+  if (request !== syncTabRequest || !syncEnabled) return
   if (!result.success) {
     setSyncTabAvailable(false)
     await showSyncError(result, refreshSyncTab)
@@ -326,7 +342,7 @@ async function refreshSyncTab() {
 
   setSyncTabAvailable(true)
   applySyncCardState()
-  await renderSyncFileSelection()
+  await renderSyncFileSelection(request)
 }
 
 function setSyncTabAvailable(available: boolean) {
@@ -354,18 +370,26 @@ async function showSyncError(failure: { message: string; canRetry: boolean }, re
   await Dialog.show(failure.message, buttons, 'FlowBlock Sync')
 }
 
-async function renderSyncFileSelection() {
+async function renderSyncFileSelection(request: number) {
   const profileSelect = document.getElementById('sync-profile-select') as HTMLSelectElement | null
   if (!profileSelect) return
 
   const user = getUser()
-  if (!user) return
+  if (!user) {
+    clearSyncUsage('Impossible d’afficher votre espace Sync. Reconnectez-vous, puis rouvrez cet onglet.')
+    return
+  }
 
   const profileList = await profilesApi.get(user)
-  if (!profileList || profileList.length === 0) return
+  if (request !== syncTabRequest || !syncEnabled) return
+  if (!profileList || profileList.length === 0) {
+    clearSyncUsage('Aucun profil disponible. Rouvrez cet onglet pour réessayer.')
+    return
+  }
 
   profileSelect.innerHTML = ''
   syncProfileIds = new Map()
+  syncProfileNames = new Map()
   profileList.forEach((profile) => {
     const option = document.createElement('option')
     option.value = profile.slug
@@ -373,15 +397,37 @@ async function renderSyncFileSelection() {
     profileSelect.appendChild(option)
     if (typeof profile.id === 'string' && profile.id.length > 0) {
       syncProfileIds.set(profile.slug, profile.id)
+      syncProfileNames.set(profile.id, profile.name)
     }
   })
 
-  const preferredSlug = shared.selectedProfileSlug ?? profileList.find((p) => p.isDefault)?.slug ?? profileList[0].slug
+  const preferredSlug = profileList.find((p) => p.slug === shared.selectedProfileSlug)?.slug ?? profileList.find((p) => p.isDefault)?.slug ?? profileList[0].slug
   profileSelect.value = preferredSlug
 
-  profileSelect.onchange = () => renderSyncFilesList(profileSelect.value)
+  profileSelect.onchange = () => {
+    void renderSyncFilesList(profileSelect.value)
+  }
 
+  void refreshSyncUsage()
   await renderSyncFilesList(profileSelect.value)
+}
+
+async function refreshSyncUsage() {
+  const request = ++syncUsageRequest
+  const profileIds = [...new Set(syncProfileIds.values())]
+  if (profileIds.length === 0) {
+    clearSyncUsage('Impossible d’afficher votre espace Sync. Rouvrez cet onglet pour actualiser vos profils.')
+    return
+  }
+  clearSyncUsage('Chargement du stockage…')
+  try {
+    const usage = await sync.getUsage(profileIds)
+    if (request !== syncUsageRequest || !syncEnabled) return
+    if (usage) renderSyncUsage(usage, syncProfileNames)
+    else clearSyncUsage('Aucun profil ne permet d’afficher votre espace Sync. Contactez l’administrateur du serveur.')
+  } catch (error) {
+    if (request === syncUsageRequest && syncEnabled) showSyncUsageError(error)
+  }
 }
 
 function renderSyncUploadProgress(progress: {
@@ -592,6 +638,7 @@ async function displaySyncResult(result: ISyncUploadResult, profileSlug?: string
         try {
           const next = await sync.resolveConflict(profileSlug!, profileId!, conflict, choice)
           await displaySyncResult(next, profileSlug, profileId)
+          if (next.success) void refreshSyncUsage()
         } finally {
           button.disabled = false
         }

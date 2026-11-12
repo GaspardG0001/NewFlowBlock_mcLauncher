@@ -334,6 +334,14 @@
               </div>
 
               <div id="sync-selection" class="sync-selection" style="display: none">
+                <div class="sync-usage" aria-label="Stockage Sync">
+                  <div class="sync-usage-heading">
+                    <span>Utilisation du stockage</span>
+                    <span id="sync-usage-total" role="status" aria-live="polite">Chargement du stockage…</span>
+                  </div>
+                  <div id="sync-usage-bar" class="sync-usage-bar" role="progressbar" aria-label="Quota de stockage Sync" aria-valuemin="0" aria-valuemax="100"></div>
+                  <div id="sync-usage-legend" class="sync-usage-legend"></div>
+                </div>
                 <div class="setting-group">
                   <label for="sync-profile-select"><i class="bi bi-folder2-open"></i>&nbsp;&nbsp;Profil</label>
                   <select id="sync-profile-select"></select>

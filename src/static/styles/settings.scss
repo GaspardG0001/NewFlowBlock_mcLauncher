@@ -564,6 +564,58 @@ p#version {
   margin-top: 20px;
 }
 
+.sync-usage {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  padding: 16px;
+}
+
+.sync-usage-heading {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: #ddd;
+  font-size: 13px;
+}
+
+.sync-usage-bar {
+  display: flex;
+  height: 12px;
+  margin-top: 12px;
+  overflow: hidden;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.sync-usage-segment {
+  height: 100%;
+  flex-shrink: 0;
+}
+
+.sync-usage-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-top: 10px;
+  color: #ddd;
+  font-size: 12px;
+}
+
+.sync-usage-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.sync-usage-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
 .sync-upload-actions {
   display: flex;
   flex-direction: column;

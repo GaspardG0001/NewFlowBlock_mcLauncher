@@ -5,6 +5,7 @@ import type { RssNewsArticle } from '../electron/handlers/news'
 import type { UserRole } from '../electron/handlers/permissions'
 import type { ISyncEntry, ISyncUploadProgress, ISyncUploadResult } from '../electron/handlers/sync'
 import type { ISyncAuthResult } from '../electron/handlers/syncAuth'
+import type { SyncUsage } from '../electron/sync/usage'
 import type {
   Account,
   CleanerEvents,
@@ -111,6 +112,7 @@ declare global {
       sync: {
         getState: () => Promise<boolean>
         authenticate: () => Promise<ISyncAuthResult>
+        getUsage: (profileIds: string[]) => Promise<SyncUsage | null>
         setEnabled: (enabled: boolean) => Promise<ISyncAuthResult>
         listInstanceEntries: (profileSlug: string, profileId?: string) => Promise<ISyncEntry[]>
         getSelection: (profileSlug: string) => Promise<string[]>
@@ -212,6 +214,7 @@ export const system = {
 export const sync = {
   getState: () => window.api.sync.getState(),
   authenticate: () => window.api.sync.authenticate(),
+  getUsage: (profileIds: string[]) => window.api.sync.getUsage(profileIds),
   setEnabled: (enabled: boolean) => window.api.sync.setEnabled(enabled),
   listInstanceEntries: (profileSlug: string, profileId?: string) => window.api.sync.listInstanceEntries(profileSlug, profileId),
   getSelection: (profileSlug: string) => window.api.sync.getSelection(profileSlug),

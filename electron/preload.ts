@@ -6,6 +6,7 @@ import type { RssNewsArticle } from './handlers/news'
 import type { UserRole } from './handlers/permissions'
 import type { ISyncEntry, ISyncUploadProgress, ISyncUploadResult } from './handlers/sync'
 import type { ISyncAuthResult } from './handlers/syncAuth'
+import type { SyncUsage } from './sync/usage'
 import type {
   Account,
   CleanerEvents,
@@ -124,6 +125,7 @@ contextBridge.exposeInMainWorld('api', {
   sync: {
     getState: (): Promise<boolean> => ipcRenderer.invoke('sync:get_state'),
     authenticate: (): Promise<ISyncAuthResult> => ipcRenderer.invoke('sync:authenticate'),
+    getUsage: (profileIds: string[]): Promise<SyncUsage | null> => ipcRenderer.invoke('sync:get_usage', profileIds),
     setEnabled: (enabled: boolean): Promise<ISyncAuthResult> => ipcRenderer.invoke('sync:set_enabled', enabled),
     listInstanceEntries: (profileSlug: string, profileId?: string): Promise<ISyncEntry[]> =>
       ipcRenderer.invoke('sync:list_instance_entries', profileSlug, profileId),

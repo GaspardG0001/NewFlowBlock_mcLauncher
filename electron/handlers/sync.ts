@@ -14,6 +14,7 @@ import { clearSyncAuth, ensureSyncAuthenticated, getSyncAuthFailure, getSyncBear
 import { readSyncConflicts, runSync, type SyncConflict, type SyncResult } from '../sync/engine'
 import { atomicJson } from '../sync/files'
 import { validateFilePath } from '../sync/paths'
+import { parseSyncUsage, type SyncUsage } from '../sync/usage'
 
 const statePath = path.join(app.getPath('userData'), 'sync.json')
 export interface ISyncEntry {
@@ -311,6 +312,19 @@ export function registerSyncHandlers(authService: IAuthService): SyncService {
     }
   }
   ipcMain.handle('sync:get_state', () => readState().enabled)
+  ipcMain.handle('sync:get_usage', async (_event, profileIds: string[]): Promise<SyncUsage | null> => {
+    if (!Array.isArray(profileIds) || profileIds.length > 1000) throw new SyncUploadError('Actualisez la liste des profils puis réessayez.')
+    for (const profileId of profileIds) validateProfile('local', profileId)
+    if (!readState().enabled) throw new SyncUploadError('Activez FlowBlock Sync avant de consulter le stockage.')
+    const identity = await ensureSyncAuthenticated(authService.getSavedAccountForSync, authService.refreshSavedAccountForSync)
+    for (const profileId of profileIds) {
+      const config = await requestSync(authService, profileId, 'config', undefined, undefined, identity.player.minecraftUuid)
+      if (!isRecord(config) || typeof config.enabled !== 'boolean') throw new SyncUploadError('La configuration Sync est invalide.')
+      if (!config.enabled) continue
+      return parseSyncUsage(await requestSync(authService, profileId, 'usage', undefined, undefined, identity.player.minecraftUuid))
+    }
+    return null
+  })
   ipcMain.handle('sync:authenticate', async (): Promise<ISyncAuthResult> => {
     try {
       return { success: true, status: await ensureSyncAuthenticated(authService.getSavedAccountForSync, authService.refreshSavedAccountForSync) }

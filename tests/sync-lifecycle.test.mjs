@@ -145,3 +145,39 @@ test('switching accounts during a game prevents automatic uploads into the new a
   assert.match(events.at(-1)[1].message, /compte actif a changé/)
   assert.equal(service.isBusy(), false)
 })
+
+test('usage is requested with the player token and validated before reaching the renderer', async () => {
+  const previousFetch = globalThis.fetch
+  const usage = {
+    scope: 'player',
+    quotaBytes: '5368709120',
+    usedBytes: '1234',
+    reservedBytes: '56',
+    profiles: [{ profileId: 'other', usedBytes: '1234', reservedBytes: '56' }]
+  }
+  try {
+    const calls = []
+    globalThis.fetch = async (url, options) => {
+      assert.equal(options.headers.Authorization, 'Bearer token')
+      calls.push(url.pathname)
+      if (url.pathname.endsWith('/config')) return Response.json({ enabled: url.pathname.includes('/profile-id/') })
+      assert.match(url.pathname, /\/profiles\/profile-id\/usage$/)
+      return Response.json(usage)
+    }
+    const profiles = ['disabled', 'profile-id']
+    assert.deepEqual(await handlers.get('sync:get_usage')({}, profiles), usage)
+    assert.deepEqual(calls.map((url) => url.split('/').slice(-2).join('/')), ['disabled/config', 'profile-id/config', 'profile-id/usage'])
+    assert.equal(await handlers.get('sync:get_usage')({}, ['disabled']), null)
+    usage.usedBytes = '1235'
+    await assert.rejects(handlers.get('sync:get_usage')({}, profiles), /incohérente/)
+    usage.usedBytes = '-1'
+    await assert.rejects(handlers.get('sync:get_usage')({}, profiles), /invalide/)
+    usage.usedBytes = '1234'
+    usage.scope = 'profile'
+    await assert.rejects(handlers.get('sync:get_usage')({}, profiles), /invalide/)
+    globalThis.fetch = async () => Response.json({ code: 'SYNC_DISABLED' }, { status: 503 })
+    await assert.rejects(handlers.get('sync:get_usage')({}, profiles), /désactivée/)
+  } finally {
+    globalThis.fetch = previousFetch
+  }
+})
