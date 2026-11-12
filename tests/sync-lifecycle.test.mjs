@@ -3,6 +3,8 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
+import { createServer as createHttpServer } from 'node:http'
+import { once } from 'node:events'
 import { createServer } from 'vite'
 
 const temp = await fs.mkdtemp(path.join(os.tmpdir(), 'flowblock-lifecycle-'))
@@ -47,10 +49,54 @@ const vite = await createServer({
     }
   ]
 })
-const { registerSyncHandlers } = await vite.ssrLoadModule('/electron/handlers/sync.ts')
+const { putFile, registerSyncHandlers } = await vite.ssrLoadModule('/electron/handlers/sync.ts')
 const service = registerSyncHandlers({ getSavedAccountForSync: async () => ({ uuid }), refreshSavedAccountForSync: async () => ({ uuid }) })
 const events = []
 const sender = { isDestroyed: () => false, send: (...args) => events.push(args) }
+
+test('storage upload errors report the HTTP status without exposing the signed URL', async () => {
+  const file = path.join(temp, 'upload.txt')
+  const data = Buffer.from('upload')
+  await fs.writeFile(file, data)
+  let receivedHeaders
+  const server = createHttpServer((request, response) => {
+    receivedHeaders = request.headers
+    response.writeHead(403)
+    response.end()
+  })
+  server.listen(0, '127.0.0.1')
+  await once(server, 'listening')
+  const address = server.address()
+  assert.ok(address && typeof address !== 'string')
+  try {
+    await assert.rejects(
+      putFile(
+        `http://127.0.0.1:${address.port}/signed?secret=value`,
+        {
+          'x-amz-checksum-sha256': 'signed-checksum',
+          'content-length': String(data.length),
+          'x-storage-token': 'signed-token'
+        },
+        file,
+        data.length,
+        () => {}
+      ),
+      (error) => {
+        assert.match(error.message, /HTTP 403/)
+        assert.doesNotMatch(error.message, /secret=value/)
+        return true
+      }
+    )
+    assert.equal(receivedHeaders?.['x-amz-checksum-sha256'], 'signed-checksum')
+    assert.equal(receivedHeaders?.['content-length'], String(data.length))
+    assert.equal(receivedHeaders?.['x-storage-token'], 'signed-token')
+  } finally {
+    const closed = once(server, 'close')
+    server.close()
+    await closed
+  }
+})
+
 after(async () => {
   globalThis.fetch = originalFetch
   delete globalThis.__syncLifecycle

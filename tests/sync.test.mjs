@@ -42,7 +42,11 @@ async function harness(body) {
         uploadRequired: true,
         uploadId,
         uploadUrl: `http://localhost/${body.hash.slice(7)}`,
-        uploadHeaders: { 'x-amz-checksum-sha256': Buffer.from(body.hash.slice(7), 'hex').toString('base64') }
+        uploadHeaders: {
+          'x-amz-checksum-sha256': Buffer.from(body.hash.slice(7), 'hex').toString('base64'),
+          'content-length': body.size,
+          'x-storage-token': 'signed-token'
+        }
       }
     }
     if (operation.includes('/commit')) {
@@ -69,8 +73,14 @@ async function harness(body) {
       selections: ['saves'],
       mode: 'sync',
       request,
-      upload: async (url, file) => {
-        blobs.set(url.pathname.slice(1), await fs.readFile(file))
+      upload: async (url, file, _size, headers) => {
+        const content = await fs.readFile(file)
+        assert.deepEqual({ ...headers }, {
+          'x-amz-checksum-sha256': createHash('sha256').update(content).digest('base64'),
+          'content-length': String(content.length),
+          'x-storage-token': 'signed-token'
+        })
+        blobs.set(url.pathname.slice(1), content)
       }
     }
   }

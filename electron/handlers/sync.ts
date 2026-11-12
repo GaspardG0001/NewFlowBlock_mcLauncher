@@ -161,7 +161,7 @@ function getApiError(body: unknown, status: number): Error {
   return new SyncUploadError('La synchronisation n’a pas pu aboutir. Vérifiez votre sélection puis réessayez.')
 }
 
-function putFile(
+export function putFile(
   uploadUrl: string,
   headers: Record<string, string>,
   filePath: string,
@@ -172,11 +172,17 @@ function putFile(
     const target = new URL(uploadUrl)
     const transport = target.protocol === 'https:' ? https : http
     const source = createReadStream(filePath)
+    const requestHeaders = { ...headers }
+    const contentLengthHeaders = Object.keys(requestHeaders).filter((name) => name.toLowerCase() === 'content-length')
+    if (contentLengthHeaders.length > 1 || (contentLengthHeaders.length === 1 && requestHeaders[contentLengthHeaders[0]] !== String(fileSize))) {
+      throw new SyncUploadError('La longueur du fichier ne correspond pas aux en-têtes d’upload.')
+    }
+    if (contentLengthHeaders.length === 0) requestHeaders['Content-Length'] = String(fileSize)
     const request = transport.request(
       target,
       {
         method: 'PUT',
-        headers: { ...headers, 'Content-Length': String(fileSize) }
+        headers: requestHeaders
       },
       (response) => {
         response.resume()
@@ -184,7 +190,15 @@ function putFile(
           if (response.statusCode && response.statusCode >= 200 && response.statusCode < 300) {
             resolve()
           } else {
-            reject(new SyncUploadError('Impossible de transmettre un fichier. Vérifiez votre connexion puis réessayez.'))
+            const statusCode = response.statusCode
+            logger.warn('FlowBlock Sync storage upload returned HTTP status:', statusCode ?? 'unknown')
+            reject(
+              new SyncUploadError(
+                statusCode && statusCode >= 500
+                  ? `Le service de stockage a rencontré une erreur (HTTP ${statusCode}). Réessayez plus tard.`
+                  : `Le stockage a refusé le transfert (HTTP ${statusCode ?? 'inconnu'}). Vérifiez la configuration Sync ou contactez l’administrateur.`
+              )
+            )
           }
         })
       }

@@ -43,6 +43,14 @@ function record(input: unknown): Record<string, unknown> {
   if (!input || typeof input !== 'object' || Array.isArray(input)) throw new Error('Réponse Sync invalide.')
   return input as Record<string, unknown>
 }
+function stringHeaders(input: unknown): Record<string, string> {
+  const headers: Record<string, string> = Object.create(null)
+  for (const [name, value] of Object.entries(record(input))) {
+    if (typeof value !== 'string') throw new Error('En-têtes d’upload invalides.')
+    headers[name] = value
+  }
+  return headers
+}
 function revision(input: unknown): string {
   if (typeof input !== 'string' || !/^\d+$/.test(input)) throw new Error('Révision Sync invalide.')
   return input
@@ -261,10 +269,10 @@ export async function runSync(options: SyncOptions): Promise<SyncResult> {
           )
           if (typeof prepared.uploadId !== 'string' || typeof prepared.uploadRequired !== 'boolean') throw new Error('Session d’upload invalide.')
           if (prepared.uploadRequired) {
-            const headers = record(prepared.uploadHeaders)
+            const headers = stringHeaders(prepared.uploadHeaders)
             const checksum = Buffer.from(snapshot.hash.slice(7), 'hex').toString('base64')
             if (headers['x-amz-checksum-sha256'] !== checksum) throw new Error('Checksum d’upload invalide.')
-            await options.upload(signedUrl(prepared.uploadUrl), staging, snapshot.size, { 'x-amz-checksum-sha256': checksum }, (bytesSent) =>
+            await options.upload(signedUrl(prepared.uploadUrl), staging, snapshot.size, headers, (bytesSent) =>
               options.progress?.({ completedFiles, totalFiles: paths.length, currentPath: file, bytesSent, fileSize: snapshot.size })
             )
           }
